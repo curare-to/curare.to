@@ -6,6 +6,7 @@ import type { PostGroup } from '@/lib/protocol/group'
 import { describeEntry, flairFields, hasImageField } from '@/lib/render/entry'
 import type { ListSnapshot } from '@/lib/store/listStore'
 import type { ListRef, ListTab } from '@/lib/routes'
+import { useCommentCounts } from '@/lib/store/threadStore'
 import { EntryCard } from './EntryCard'
 
 /** The front page (curated groups) or the queue (every group, state shown), with a flair filter. */
@@ -22,6 +23,7 @@ export function PostList({
 }) {
   const [flair, setFlair] = useState<{ field: string; value: string } | null>(null)
   const layout = hasImageField(schema) ? 'card' : 'row'
+  const countFor = useCommentCounts(schema, snapshot.groups.slice(0, 120), snapshot.relays)
 
   const groups = useMemo(() => {
     const visible = tab === 'front' ? snapshot.groups.filter((g) => g.state === 'curated') : snapshot.groups
@@ -77,13 +79,13 @@ export function PostList({
       ) : layout === 'card' ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {groups.map((g) => (
-            <EntryCard key={g.identifier} group={g} schema={schema} list={list} layout="card" showState={tab === 'new'} />
+            <EntryCard key={g.identifier} group={g} schema={schema} list={list} layout="card" showState={tab === 'new'} comments={countFor(g)} />
           ))}
         </div>
       ) : (
         <div className="space-y-2">
           {groups.map((g) => (
-            <EntryCard key={g.identifier} group={g} schema={schema} list={list} layout="row" showState={tab === 'new'} />
+            <EntryCard key={g.identifier} group={g} schema={schema} list={list} layout="row" showState={tab === 'new'} comments={countFor(g)} />
           ))}
         </div>
       )}

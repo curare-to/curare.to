@@ -98,3 +98,45 @@ export function closedSchemaEvent(): Event {
     created_at: T0,
   })
 }
+
+/**
+ * A second list, for the comments run: one pending post that the run curates
+ * from outside the page, so the main list's counts stay what list.spec expects.
+ */
+export const COMMENT_LIST = 'commented-things'
+export const COMMENT_ADDRESS = `31889:${CURATOR}:${COMMENT_LIST}`
+
+export function commentSchemaEvent(): Event {
+  return signedBy('e2e curator', {
+    kind: 31889,
+    tags: [
+      ['d', COMMENT_LIST],
+      ['title', 'commented things suggestion'],
+      ['name', 'Commented things'],
+      ['description', 'One post, for the thread to survive curation.'],
+      ['visibility', 'public'],
+      ['relay', RELAY],
+      ['field', 'identifier', 'token', 'required', '', 'Identifier', '{"tag":"d","max":80,"derived":true}'],
+      ['field', 'title', 'text', 'required', '', 'Title', '{"max":200}'],
+      ['field', 'link', 'url', 'optional', 'https://…', 'Link', '{"tag":"r","marker":"link","max":500}'],
+    ],
+    content: 'One post, for the thread to survive curation.',
+    created_at: T0,
+  })
+}
+
+export function commentPost(): Event {
+  return signedBy('e2e alice', {
+    kind: 31888,
+    tags: [
+      ['d', 'the-one'],
+      ['title', 'The one that gets curated'],
+      ['r', 'https://example.org/the-one', 'link'],
+      ['a', COMMENT_ADDRESS, RELAY, 'root'],
+      ['p', CURATOR],
+      ['k', '31889'],
+    ],
+    content: '',
+    created_at: T0 + 1000,
+  })
+}

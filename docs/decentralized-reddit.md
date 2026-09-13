@@ -20,7 +20,7 @@ never edited; what each would gain from this work is listed at the end, under
 
 **Being built.** Phases 0–9, in the order given, one commit each, all of them
 in this repository; the table below records where a phase, once built, chose
-differently from what the plan said. Phases 0–2 are built. Every phase is deployable on its own and none reaches
+differently from what the plan said. Phases 0–3 are built. Every phase is deployable on its own and none reaches
 forward, except where the text says a later phase is what makes an earlier one
 honest. Phases 0–2 are the request as
 stated — a sub is a schema, a post is a canonical entry, and people can read
@@ -40,6 +40,8 @@ Everything after is what makes it reddit rather than a directory of lists.
 | 2 | "the one derived field the site fills is `d`" | when the schema marks its d field `derived`. A schema that does not — the directory's "list coordinate" shape — wants the person to supply it, so the form prompts for it and its value is the identifier, checked by the field's own rules |
 | 2 | `fieldProps` marks the first field of a `require-any` group required | it does, for bitcoin.mov's inline error; the form here labels every field of the group "one of Link, Text" instead, and the error still lands on the first |
 | 2 | the duplicate check looks the derived `d` up in the store | after `whenLoaded()`: a form opened by a full navigation submits before the relays have answered, and an empty store is not "no duplicate" |
+| 3 | "`nostr:naddr…` become links to `/r/`" | `nostr:npub…` links to `/u/`; naddr is left as text until there is a page to link it to — the list page takes an npub and a `d`, and an naddr carries both, so it is a small later addition |
+| 3 | "done when … after `npm run curate` curates it" | the e2e run curates from outside the page with the run's own curator key, on a list of its own so the other specs' counts hold; bitcoin.mov's script does the same thing to the same relay, and the interop test covers that it would |
 | 2 | "done when … `npm run curate` there can curate it" | proven offline: `test/interop.test.ts` (opt-in, `INTEROP=1`) publishes a suggestion built here to the fake relay seeded with bitcoin.mov's real schema and runs that repository's `curate` script in unsigned mode against it — it emits a canonical template this site verifies. No key, no network, nothing changed there |
 
 ## The mapping

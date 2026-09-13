@@ -40,12 +40,14 @@ export function EntryCard({
   list,
   layout,
   showState,
+  comments,
 }: {
   group: PostGroup
   schema: CuratedSchema
   list: ListRef
   layout: 'card' | 'row'
   showState: boolean
+  comments?: number
 }) {
   const view = describeEntry(group.head, schema)
   const href = buildPath({ kind: 'entry', list, entry: group.identifier })
@@ -58,6 +60,9 @@ export function EntryCard({
         by <ProfileName pubkey={view.pubkey} />
       </span>
       <TimeAgo seconds={view.createdAt} />
+      <A href={href} className="text-muted hover:text-ink">
+        {comments ?? 0} {comments === 1 ? 'comment' : 'comments'}
+      </A>
       {versions > 1 ? <span title="Suggested by more than one person.">{versions} versions</span> : null}
       <FlairChips flairs={view.flairs} />
     </p>

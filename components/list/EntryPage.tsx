@@ -14,6 +14,7 @@ import { SafeImage } from '@/components/ui/SafeImage'
 import { FlairChips, StateBadge } from './EntryCard'
 import { suggestHref } from './ListHeader'
 import { useSession } from '@/lib/store/session'
+import { Thread } from '@/components/thread/Thread'
 
 /** One post: the group's head in full, the other versions folded beneath. */
 export function EntryPage({
@@ -127,6 +128,8 @@ export function EntryPage({
       ) : others.length > 0 ? (
         <Versions title="Also suggested by" schema={schema} events={others} />
       ) : null}
+
+      <Thread schema={schema} group={group} relays={snapshot.relays} />
     </article>
   )
 }
