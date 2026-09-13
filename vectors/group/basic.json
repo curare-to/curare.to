@@ -1,0 +1,523 @@
+{
+  "name": "basic",
+  "note": "Suggestions sharing a d form one group; the canonical entry heads it; a canonical whose source has a different d pulls that suggestion in; a curator-added entry is a group of one.",
+  "schema": {
+    "kind": 31889,
+    "tags": [
+      [
+        "d",
+        "bitcoin.mov"
+      ],
+      [
+        "title",
+        "bitcoin.mov suggestion"
+      ],
+      [
+        "name",
+        "bitcoin.mov"
+      ],
+      [
+        "description",
+        "Fields for a bitcoin.mov entry: a Bitcoin movie, documentary, short, interview or series, with at least one link to watch or look it up."
+      ],
+      [
+        "k",
+        "31888"
+      ],
+      [
+        "visibility",
+        "public"
+      ],
+      [
+        "picture",
+        "https://bitcoin.mov/icon.svg"
+      ],
+      [
+        "domain",
+        "bitcoin.mov"
+      ],
+      [
+        "relay",
+        "wss://relay.example.com"
+      ],
+      [
+        "field",
+        "identifier",
+        "token",
+        "required",
+        "the-rise-and-rise-of-bitcoin-2014",
+        "Identifier",
+        "{\"tag\":\"d\",\"max\":80,\"derived\":true}"
+      ],
+      [
+        "field",
+        "title",
+        "text",
+        "required",
+        "The Rise and Rise of Bitcoin",
+        "Title",
+        "{\"max\":200}"
+      ],
+      [
+        "field",
+        "year",
+        "year",
+        "optional",
+        "2014",
+        "Year",
+        "{\"min\":1900,\"max\":2100}"
+      ],
+      [
+        "field",
+        "type",
+        "enum",
+        "required",
+        "documentary",
+        "Type",
+        "{\"options\":[\"movie\",\"documentary\",\"short\",\"interview\",\"series\",\"other\"]}"
+      ],
+      [
+        "field",
+        "watchUrl",
+        "url",
+        "optional",
+        "https://youtube.com/watch?v=…",
+        "Watch / reference URL",
+        "{\"tag\":\"r\",\"marker\":\"watch\",\"max\":500,\"repeat\":true}"
+      ],
+      [
+        "field",
+        "imdbUrl",
+        "url",
+        "optional",
+        "https://imdb.com/title/tt2821314",
+        "IMDb URL",
+        "{\"tag\":\"r\",\"marker\":\"imdb\",\"max\":500}"
+      ],
+      [
+        "field",
+        "image",
+        "image",
+        "optional",
+        "https://…/poster.jpg",
+        "Poster image URL (https)",
+        "{\"max\":500}"
+      ],
+      [
+        "field",
+        "hashtags",
+        "token",
+        "optional",
+        "bitcoin",
+        "Hashtags",
+        "{\"tag\":\"t\",\"max\":60,\"repeat\":true,\"derived\":true}"
+      ],
+      [
+        "field",
+        "description",
+        "longtext",
+        "optional",
+        "Why is this worth watching?",
+        "Description / review",
+        "{\"tag\":\"content\",\"max\":4000}"
+      ],
+      [
+        "require-any",
+        "watchUrl",
+        "imdbUrl"
+      ]
+    ],
+    "content": "Fields for a bitcoin.mov entry: a Bitcoin movie, documentary, short, interview or series, with at least one link to watch or look it up.",
+    "created_at": 1735689600,
+    "pubkey": "3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1",
+    "id": "ed8b175c7ed47719e2c80f1a4d6d2e4967346a11ff0b291090ab980dce476c7c",
+    "sig": "09e42ad36461b3cb2d7162d27dcaa671e110f96780f25beb05426b746a32ecf7c5a525eb0836a09753e840cd889969e1fdd4630f8aae7a6788e0a16805b3d63f"
+  },
+  "events": [
+    {
+      "kind": 31888,
+      "tags": [
+        [
+          "d",
+          "shared"
+        ],
+        [
+          "title",
+          "Post shared"
+        ],
+        [
+          "type",
+          "movie"
+        ],
+        [
+          "r",
+          "https://example.com/shared",
+          "watch"
+        ],
+        [
+          "a",
+          "31889:3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1:bitcoin.mov",
+          "wss://relay.example.com",
+          "root"
+        ],
+        [
+          "p",
+          "3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1"
+        ],
+        [
+          "k",
+          "31889"
+        ]
+      ],
+      "content": "",
+      "created_at": 1735689610,
+      "pubkey": "e9853513fa9f56af8ea40749dc3e27880d7fcd6eb649e030b35cdc78c0b58ab5",
+      "id": "3ae0910f1facb4f51e6445bfb632bf66abe9a93d9740c2e6327e02e8ee2f7d2f",
+      "sig": "e7fcd7981d58a71f48ccdaefc13ddfcb33fa3f2ed9dc4ada10703ee86d74b05594630a505af36813b9a8875e65ae169deb9a9cf1a7480763f1a8518461358616"
+    },
+    {
+      "kind": 31888,
+      "tags": [
+        [
+          "d",
+          "shared"
+        ],
+        [
+          "title",
+          "Post shared"
+        ],
+        [
+          "type",
+          "movie"
+        ],
+        [
+          "r",
+          "https://example.com/shared",
+          "watch"
+        ],
+        [
+          "a",
+          "31889:3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1:bitcoin.mov",
+          "wss://relay.example.com",
+          "root"
+        ],
+        [
+          "p",
+          "3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1"
+        ],
+        [
+          "k",
+          "31889"
+        ]
+      ],
+      "content": "",
+      "created_at": 1735689620,
+      "pubkey": "694a108039f4c555c2b38f7ac6f836ac04b71074385df36993185a5386579303",
+      "id": "d2d01f8daa7de07c13f8d62f38a796a734f107ea92cea7b75bb4e2ed7b4c6a30",
+      "sig": "9a2e55c0f86ea6ad332665d3b1042f8488dedc1d7f2c0956bbebebbd11c320fc27170402ce953f04816cfc3c96ef00c66e4fb6b33400c29cefdb5dd9fe4716e6"
+    },
+    {
+      "kind": 31890,
+      "tags": [
+        [
+          "d",
+          "shared"
+        ],
+        [
+          "title",
+          "Post shared"
+        ],
+        [
+          "type",
+          "movie"
+        ],
+        [
+          "r",
+          "https://example.com/shared",
+          "watch"
+        ],
+        [
+          "a",
+          "31889:3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1:bitcoin.mov",
+          "wss://relay.example.com",
+          "root"
+        ],
+        [
+          "p",
+          "3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1"
+        ],
+        [
+          "k",
+          "31889"
+        ],
+        [
+          "a",
+          "31888:e9853513fa9f56af8ea40749dc3e27880d7fcd6eb649e030b35cdc78c0b58ab5:shared",
+          "",
+          "mention"
+        ],
+        [
+          "e",
+          "3ae0910f1facb4f51e6445bfb632bf66abe9a93d9740c2e6327e02e8ee2f7d2f",
+          "",
+          "mention"
+        ],
+        [
+          "p",
+          "e9853513fa9f56af8ea40749dc3e27880d7fcd6eb649e030b35cdc78c0b58ab5"
+        ]
+      ],
+      "content": "",
+      "created_at": 1735689630,
+      "pubkey": "3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1",
+      "id": "614cbbef8cd210dfa1a69b1fc6dc5500664e028e7546f587f557052e01c9e624",
+      "sig": "a2623f6abba145bc03018c628d577ff25438361ff35ea3f061721d588187220427b449eff8603274c29a06d8dec31edb5667258be6959def62fba41ea1333eb5"
+    },
+    {
+      "kind": 31888,
+      "tags": [
+        [
+          "d",
+          "alone"
+        ],
+        [
+          "title",
+          "Post alone"
+        ],
+        [
+          "type",
+          "movie"
+        ],
+        [
+          "r",
+          "https://example.com/alone",
+          "watch"
+        ],
+        [
+          "a",
+          "31889:3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1:bitcoin.mov",
+          "wss://relay.example.com",
+          "root"
+        ],
+        [
+          "p",
+          "3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1"
+        ],
+        [
+          "k",
+          "31889"
+        ]
+      ],
+      "content": "",
+      "created_at": 1735689640,
+      "pubkey": "8cdbd625a4ab2bca9d27dde7887077a6ea440020c9429aee86cf7c29756ad895",
+      "id": "5e99ef50f9b7e0fddb252f213c85c5ff871c01786624b39afed33cdd50b76d6d",
+      "sig": "34ee3d6216d2400dd6113b570771ef515fb2e96b8175fc62b20454f7b12b3815780c046a9cf59f64adc896de5eed029d4173a337829138cba9ec034c13fd6243"
+    },
+    {
+      "kind": 31888,
+      "tags": [
+        [
+          "d",
+          "original"
+        ],
+        [
+          "title",
+          "Post original"
+        ],
+        [
+          "type",
+          "movie"
+        ],
+        [
+          "r",
+          "https://example.com/original",
+          "watch"
+        ],
+        [
+          "a",
+          "31889:3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1:bitcoin.mov",
+          "wss://relay.example.com",
+          "root"
+        ],
+        [
+          "p",
+          "3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1"
+        ],
+        [
+          "k",
+          "31889"
+        ]
+      ],
+      "content": "",
+      "created_at": 1735689650,
+      "pubkey": "2217a2f4c8b6f47707519178200c957b4a49ea9907ec98edfd0a0b7ca9ad2792",
+      "id": "fb30fe73ad8cd60b104c5d1c29f7b0108d06081cedb249a4a4d109cfd188249e",
+      "sig": "1e8fcd9ff3af03729ecb3783a8996593bf63290606204779954c7b02d450b1ca42fbef0002a76fa27c968e4ed1fdb462bb0f35d508bd66e36e57e66bde7e0780"
+    },
+    {
+      "kind": 31890,
+      "tags": [
+        [
+          "d",
+          "renamed"
+        ],
+        [
+          "title",
+          "Post renamed"
+        ],
+        [
+          "type",
+          "movie"
+        ],
+        [
+          "r",
+          "https://example.com/renamed",
+          "watch"
+        ],
+        [
+          "a",
+          "31889:3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1:bitcoin.mov",
+          "wss://relay.example.com",
+          "root"
+        ],
+        [
+          "p",
+          "3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1"
+        ],
+        [
+          "k",
+          "31889"
+        ],
+        [
+          "a",
+          "31888:2217a2f4c8b6f47707519178200c957b4a49ea9907ec98edfd0a0b7ca9ad2792:original",
+          "",
+          "mention"
+        ],
+        [
+          "e",
+          "fb30fe73ad8cd60b104c5d1c29f7b0108d06081cedb249a4a4d109cfd188249e",
+          "",
+          "mention"
+        ],
+        [
+          "p",
+          "2217a2f4c8b6f47707519178200c957b4a49ea9907ec98edfd0a0b7ca9ad2792"
+        ]
+      ],
+      "content": "",
+      "created_at": 1735689660,
+      "pubkey": "3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1",
+      "id": "6cd841406cd0be0c641c869fc7566ef4adc93eac41ee876411c68e91369d833f",
+      "sig": "5c41ed96409d1e42aa40fdbf6f7e87dc8d797eb8baa16fe20b1e1b33bafd1ffadaaf75c91d96b6d8950ce31ffb232c10d3b7da58ba976abe9171491a9ec63707"
+    },
+    {
+      "kind": 31890,
+      "tags": [
+        [
+          "d",
+          "added"
+        ],
+        [
+          "title",
+          "Post added"
+        ],
+        [
+          "type",
+          "movie"
+        ],
+        [
+          "r",
+          "https://example.com/added",
+          "watch"
+        ],
+        [
+          "a",
+          "31889:3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1:bitcoin.mov",
+          "wss://relay.example.com",
+          "root"
+        ],
+        [
+          "p",
+          "3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1"
+        ],
+        [
+          "k",
+          "31889"
+        ]
+      ],
+      "content": "",
+      "created_at": 1735689670,
+      "pubkey": "3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1",
+      "id": "573c50ccc36af42b7f7b23bf90f08eced0a8336aab4d2905feb7d7ff8854c512",
+      "sig": "b516bfeee785341366535298b234ba9de1cbcff1a6e66ee8c113f9bfd6eb78d839f263a610abd30a091aae2b5b8a7c6d4c991cd0752afec25faa14a1eb1c247f"
+    }
+  ],
+  "groups": [
+    {
+      "identifier": "added",
+      "state": "curated",
+      "head": "573c50ccc36af42b7f7b23bf90f08eced0a8336aab4d2905feb7d7ff8854c512",
+      "canonical": "573c50ccc36af42b7f7b23bf90f08eced0a8336aab4d2905feb7d7ff8854c512",
+      "suggestions": [],
+      "coordinates": [
+        "31890:3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1:added"
+      ]
+    },
+    {
+      "identifier": "renamed",
+      "state": "curated",
+      "head": "6cd841406cd0be0c641c869fc7566ef4adc93eac41ee876411c68e91369d833f",
+      "canonical": "6cd841406cd0be0c641c869fc7566ef4adc93eac41ee876411c68e91369d833f",
+      "suggestions": [
+        "fb30fe73ad8cd60b104c5d1c29f7b0108d06081cedb249a4a4d109cfd188249e"
+      ],
+      "coordinates": [
+        "31890:3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1:renamed",
+        "31888:2217a2f4c8b6f47707519178200c957b4a49ea9907ec98edfd0a0b7ca9ad2792:original"
+      ]
+    },
+    {
+      "identifier": "original",
+      "state": "pending",
+      "head": "fb30fe73ad8cd60b104c5d1c29f7b0108d06081cedb249a4a4d109cfd188249e",
+      "canonical": null,
+      "suggestions": [
+        "fb30fe73ad8cd60b104c5d1c29f7b0108d06081cedb249a4a4d109cfd188249e"
+      ],
+      "coordinates": [
+        "31890:3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1:original",
+        "31888:2217a2f4c8b6f47707519178200c957b4a49ea9907ec98edfd0a0b7ca9ad2792:original"
+      ]
+    },
+    {
+      "identifier": "alone",
+      "state": "pending",
+      "head": "5e99ef50f9b7e0fddb252f213c85c5ff871c01786624b39afed33cdd50b76d6d",
+      "canonical": null,
+      "suggestions": [
+        "5e99ef50f9b7e0fddb252f213c85c5ff871c01786624b39afed33cdd50b76d6d"
+      ],
+      "coordinates": [
+        "31890:3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1:alone",
+        "31888:8cdbd625a4ab2bca9d27dde7887077a6ea440020c9429aee86cf7c29756ad895:alone"
+      ]
+    },
+    {
+      "identifier": "shared",
+      "state": "curated",
+      "head": "614cbbef8cd210dfa1a69b1fc6dc5500664e028e7546f587f557052e01c9e624",
+      "canonical": "614cbbef8cd210dfa1a69b1fc6dc5500664e028e7546f587f557052e01c9e624",
+      "suggestions": [
+        "d2d01f8daa7de07c13f8d62f38a796a734f107ea92cea7b75bb4e2ed7b4c6a30",
+        "3ae0910f1facb4f51e6445bfb632bf66abe9a93d9740c2e6327e02e8ee2f7d2f"
+      ],
+      "coordinates": [
+        "31890:3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1:shared",
+        "31888:694a108039f4c555c2b38f7ac6f836ac04b71074385df36993185a5386579303:shared",
+        "31888:e9853513fa9f56af8ea40749dc3e27880d7fcd6eb649e030b35cdc78c0b58ab5:shared"
+      ]
+    }
+  ]
+}

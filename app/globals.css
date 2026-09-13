@@ -1,0 +1,82 @@
+@import 'tailwindcss';
+
+/* ================================================================== *
+ * curare.to — a quiet reading surface.
+ * Cool green-biased neutrals, one teal accent, and a system font stack:
+ * the content is other people's lists, and the chrome should stay out of
+ * their way. Light and dark follow the viewer's preference.
+ * ================================================================== */
+@theme {
+  --color-ground: #f7f8f6;
+  --color-surface: #ffffff;
+  --color-surface-2: #eef2ef;
+  --color-ink: #1b2321;
+  --color-ink-2: #364540;
+  --color-muted: #5c6a66;
+  --color-line: #d9e0dc;
+  --color-line-strong: #b8c4be;
+  --color-accent: #0e6b5e;
+  --color-accent-ink: #0b5449;
+  --color-accent-soft: #e3f1ec;
+  --color-note: #8a5a12;
+  --color-note-soft: #f6ecd9;
+  --color-danger: #a63d2f;
+  --color-danger-soft: #f8e6e2;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-ground: #101614;
+    --color-surface: #171f1c;
+    --color-surface-2: #1d2724;
+    --color-ink: #e8eeeb;
+    --color-ink-2: #c8d3ce;
+    --color-muted: #9aa8a2;
+    --color-line: #2a3531;
+    --color-line-strong: #3c4a45;
+    --color-accent: #4fc3ae;
+    --color-accent-ink: #7ad7c6;
+    --color-accent-soft: #163a33;
+    --color-note: #e0b062;
+    --color-note-soft: #33270f;
+    --color-danger: #e08a7c;
+    --color-danger-soft: #3a1c17;
+  }
+}
+
+html {
+  color-scheme: light dark;
+}
+
+body {
+  background-color: var(--color-ground);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  text-underline-offset: 0.15em;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line) transparent;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

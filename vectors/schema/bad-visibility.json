@@ -1,0 +1,138 @@
+{
+  "name": "bad-visibility",
+  "note": "visibility must be public, closed or private.",
+  "expect": "invalid",
+  "reason": "visibility",
+  "event": {
+    "kind": 31889,
+    "tags": [
+      [
+        "d",
+        "bitcoin.mov"
+      ],
+      [
+        "title",
+        "bitcoin.mov suggestion"
+      ],
+      [
+        "name",
+        "bitcoin.mov"
+      ],
+      [
+        "description",
+        "Fields for a bitcoin.mov entry: a Bitcoin movie, documentary, short, interview or series, with at least one link to watch or look it up."
+      ],
+      [
+        "k",
+        "31888"
+      ],
+      [
+        "visibility",
+        "friends"
+      ],
+      [
+        "picture",
+        "https://bitcoin.mov/icon.svg"
+      ],
+      [
+        "domain",
+        "bitcoin.mov"
+      ],
+      [
+        "relay",
+        "wss://relay.example.com"
+      ],
+      [
+        "field",
+        "identifier",
+        "token",
+        "required",
+        "the-rise-and-rise-of-bitcoin-2014",
+        "Identifier",
+        "{\"tag\":\"d\",\"max\":80,\"derived\":true}"
+      ],
+      [
+        "field",
+        "title",
+        "text",
+        "required",
+        "The Rise and Rise of Bitcoin",
+        "Title",
+        "{\"max\":200}"
+      ],
+      [
+        "field",
+        "year",
+        "year",
+        "optional",
+        "2014",
+        "Year",
+        "{\"min\":1900,\"max\":2100}"
+      ],
+      [
+        "field",
+        "type",
+        "enum",
+        "required",
+        "documentary",
+        "Type",
+        "{\"options\":[\"movie\",\"documentary\",\"short\",\"interview\",\"series\",\"other\"]}"
+      ],
+      [
+        "field",
+        "watchUrl",
+        "url",
+        "optional",
+        "https://youtube.com/watch?v=…",
+        "Watch / reference URL",
+        "{\"tag\":\"r\",\"marker\":\"watch\",\"max\":500,\"repeat\":true}"
+      ],
+      [
+        "field",
+        "imdbUrl",
+        "url",
+        "optional",
+        "https://imdb.com/title/tt2821314",
+        "IMDb URL",
+        "{\"tag\":\"r\",\"marker\":\"imdb\",\"max\":500}"
+      ],
+      [
+        "field",
+        "image",
+        "image",
+        "optional",
+        "https://…/poster.jpg",
+        "Poster image URL (https)",
+        "{\"max\":500}"
+      ],
+      [
+        "field",
+        "hashtags",
+        "token",
+        "optional",
+        "bitcoin",
+        "Hashtags",
+        "{\"tag\":\"t\",\"max\":60,\"repeat\":true,\"derived\":true}"
+      ],
+      [
+        "field",
+        "description",
+        "longtext",
+        "optional",
+        "Why is this worth watching?",
+        "Description / review",
+        "{\"tag\":\"content\",\"max\":4000}"
+      ],
+      [
+        "require-any",
+        "watchUrl",
+        "imdbUrl"
+      ]
+    ],
+    "content": "Fields for a bitcoin.mov entry: a Bitcoin movie, documentary, short, interview or series, with at least one link to watch or look it up.",
+    "created_at": 1735689600,
+    "pubkey": "3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1",
+    "id": "3a375a12894643547801f84c7efb4218a381f35391be2f1dfa559f8a8b89ceee",
+    "sig": "a3b10b100eff0a72a907b2d1055cb54ab45a7f98837ba947c83fc422d811b68ac80decb1052173b383ae1e9713ac18636bfc095791c5d3ac4da831d8ddd02d04"
+  }
+}

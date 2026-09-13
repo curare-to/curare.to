@@ -1,0 +1,215 @@
+{
+  "name": "closed-curator",
+  "note": "The curator may always suggest to their own list.",
+  "expect": "valid",
+  "schema": {
+    "kind": 31889,
+    "tags": [
+      [
+        "d",
+        "bitcoin.mov"
+      ],
+      [
+        "title",
+        "bitcoin.mov suggestion"
+      ],
+      [
+        "name",
+        "bitcoin.mov"
+      ],
+      [
+        "description",
+        "Fields for a bitcoin.mov entry: a Bitcoin movie, documentary, short, interview or series, with at least one link to watch or look it up."
+      ],
+      [
+        "k",
+        "31888"
+      ],
+      [
+        "visibility",
+        "closed"
+      ],
+      [
+        "picture",
+        "https://bitcoin.mov/icon.svg"
+      ],
+      [
+        "domain",
+        "bitcoin.mov"
+      ],
+      [
+        "relay",
+        "wss://relay.example.com"
+      ],
+      [
+        "field",
+        "identifier",
+        "token",
+        "required",
+        "the-rise-and-rise-of-bitcoin-2014",
+        "Identifier",
+        "{\"tag\":\"d\",\"max\":80,\"derived\":true}"
+      ],
+      [
+        "field",
+        "title",
+        "text",
+        "required",
+        "The Rise and Rise of Bitcoin",
+        "Title",
+        "{\"max\":200}"
+      ],
+      [
+        "field",
+        "year",
+        "year",
+        "optional",
+        "2014",
+        "Year",
+        "{\"min\":1900,\"max\":2100}"
+      ],
+      [
+        "field",
+        "type",
+        "enum",
+        "required",
+        "documentary",
+        "Type",
+        "{\"options\":[\"movie\",\"documentary\",\"short\",\"interview\",\"series\",\"other\"]}"
+      ],
+      [
+        "field",
+        "watchUrl",
+        "url",
+        "optional",
+        "https://youtube.com/watch?v=…",
+        "Watch / reference URL",
+        "{\"tag\":\"r\",\"marker\":\"watch\",\"max\":500,\"repeat\":true}"
+      ],
+      [
+        "field",
+        "imdbUrl",
+        "url",
+        "optional",
+        "https://imdb.com/title/tt2821314",
+        "IMDb URL",
+        "{\"tag\":\"r\",\"marker\":\"imdb\",\"max\":500}"
+      ],
+      [
+        "field",
+        "image",
+        "image",
+        "optional",
+        "https://…/poster.jpg",
+        "Poster image URL (https)",
+        "{\"max\":500}"
+      ],
+      [
+        "field",
+        "hashtags",
+        "token",
+        "optional",
+        "bitcoin",
+        "Hashtags",
+        "{\"tag\":\"t\",\"max\":60,\"repeat\":true,\"derived\":true}"
+      ],
+      [
+        "field",
+        "description",
+        "longtext",
+        "optional",
+        "Why is this worth watching?",
+        "Description / review",
+        "{\"tag\":\"content\",\"max\":4000}"
+      ],
+      [
+        "require-any",
+        "watchUrl",
+        "imdbUrl"
+      ],
+      [
+        "p",
+        "694a108039f4c555c2b38f7ac6f836ac04b71074385df36993185a5386579303"
+      ]
+    ],
+    "content": "Fields for a bitcoin.mov entry: a Bitcoin movie, documentary, short, interview or series, with at least one link to watch or look it up.",
+    "created_at": 1735689600,
+    "pubkey": "3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1",
+    "id": "c79295ccd113f2c7a0ce1d698a658a32392495d68651f978b3e1512dea184640",
+    "sig": "4b2dfc1b701f6bcbf6251fe243619e85f48b0744d22623edc8933e76361697f28fc1b33d56c4e67c473fab2ca048d5a7b1895e530387feed0185dbd18ca6c038"
+  },
+  "event": {
+    "kind": 31888,
+    "tags": [
+      [
+        "d",
+        "imdb:tt2821314"
+      ],
+      [
+        "title",
+        "The Rise and Rise of Bitcoin"
+      ],
+      [
+        "year",
+        "2014"
+      ],
+      [
+        "type",
+        "documentary"
+      ],
+      [
+        "director",
+        "Nicholas Mross"
+      ],
+      [
+        "r",
+        "http://bitcoindoc.com/",
+        "watch"
+      ],
+      [
+        "r",
+        "https://www.imdb.com/title/tt2821314/",
+        "imdb"
+      ],
+      [
+        "image",
+        "https://upload.wikimedia.org/wikipedia/en/9/96/The_Rise_and_Rise_of_Bitcoin_%282014%29_Film_Poster.jpg"
+      ],
+      [
+        "i",
+        "imdb:tt2821314"
+      ],
+      [
+        "lang",
+        "en"
+      ],
+      [
+        "t",
+        "bitcoin"
+      ],
+      [
+        "t",
+        "documentary"
+      ],
+      [
+        "a",
+        "31889:3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1:bitcoin.mov",
+        "wss://relay.example.com",
+        "root"
+      ],
+      [
+        "p",
+        "3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1"
+      ],
+      [
+        "k",
+        "31889"
+      ]
+    ],
+    "content": "Follows programmer Daniel Mross and the early Bitcoin community from 2011 onward — the miners, entrepreneurs and evangelists of Bitcoin's formative years.",
+    "created_at": 1735689660,
+    "pubkey": "3fd8ca1ee8fa9bd811ab1f6164394f8f4048c0ea4ae1fea79596a5e661fdf6f1",
+    "id": "8b67523527661b99c3de6617c1a5fddae13d3ba8e5233d941af5c3149ce34eb9",
+    "sig": "637b28f43e637ce256664261977f0fc10903fc71a2947f80ff0f97efe3e76f43dc4edacfba0e62d7604fe68888fee1ecb6b7c8be0c36b3c8ebd7150138231a5f"
+  }
+}

@@ -1,0 +1,165 @@
+{
+  "name": "bitcoin-mov-published",
+  "note": "bitcoin.mov's schema exactly as its site serves it at /.well-known/curare.to/nostr.json (copied 2026-09-13).",
+  "expect": "valid",
+  "event": {
+    "id": "3afb47158ae126648333341ada9dce54aa8a5a503eec35e72f1bcb0ed53802f6",
+    "pubkey": "f87cde3b78b9739f7d19b4dfe5f28a532f67f653bb40df147eb29066472ed72e",
+    "created_at": 1789211386,
+    "kind": 31889,
+    "tags": [
+      [
+        "d",
+        "bitcoin.mov"
+      ],
+      [
+        "title",
+        "bitcoin.mov suggestion"
+      ],
+      [
+        "name",
+        "bitcoin.mov"
+      ],
+      [
+        "description",
+        "Fields for a bitcoin.mov entry: a Bitcoin movie, documentary, short, interview or series, with at least one link to watch or look it up."
+      ],
+      [
+        "k",
+        "31888"
+      ],
+      [
+        "visibility",
+        "public"
+      ],
+      [
+        "field",
+        "identifier",
+        "token",
+        "required",
+        "the-rise-and-rise-of-bitcoin-2014",
+        "Identifier",
+        "{\"tag\":\"d\",\"max\":80,\"derived\":true,\"hint\":\"Derived from the external id, or the title and year.\"}"
+      ],
+      [
+        "field",
+        "title",
+        "text",
+        "required",
+        "The Rise and Rise of Bitcoin",
+        "Title",
+        "{\"max\":200}"
+      ],
+      [
+        "field",
+        "year",
+        "year",
+        "optional",
+        "2014",
+        "Year",
+        "{\"min\":1900,\"max\":2100}"
+      ],
+      [
+        "field",
+        "type",
+        "enum",
+        "required",
+        "documentary",
+        "Type",
+        "{\"options\":[\"movie\",\"documentary\",\"short\",\"interview\",\"series\",\"other\"]}"
+      ],
+      [
+        "field",
+        "director",
+        "text",
+        "optional",
+        "Nicholas Mross",
+        "Director",
+        "{\"max\":120}"
+      ],
+      [
+        "field",
+        "durationSeconds",
+        "duration",
+        "optional",
+        "5760",
+        "Duration (seconds)",
+        "{\"tag\":\"duration\",\"min\":1,\"max\":86399,\"hint\":\"Optional — stored in seconds; the form asks for minutes.\"}"
+      ],
+      [
+        "field",
+        "watchUrl",
+        "url",
+        "optional",
+        "https://youtube.com/watch?v=…",
+        "Watch / reference URL",
+        "{\"tag\":\"r\",\"marker\":\"watch\",\"max\":500,\"repeat\":true}"
+      ],
+      [
+        "field",
+        "imdbUrl",
+        "url",
+        "optional",
+        "https://imdb.com/title/tt2821314",
+        "IMDb URL",
+        "{\"tag\":\"r\",\"marker\":\"imdb\",\"max\":500}"
+      ],
+      [
+        "field",
+        "image",
+        "image",
+        "optional",
+        "https://…/poster.jpg",
+        "Poster image URL (https)",
+        "{\"max\":500,\"hint\":\"Optional — a link to a poster or thumbnail.\"}"
+      ],
+      [
+        "field",
+        "externalId",
+        "token",
+        "optional",
+        "imdb:tt2821314",
+        "External ID",
+        "{\"tag\":\"i\",\"max\":60,\"hint\":\"Optional — helps dedupe, e.g. imdb:tt2821314\"}"
+      ],
+      [
+        "field",
+        "lang",
+        "token",
+        "optional",
+        "en",
+        "Language",
+        "{\"max\":60,\"pattern\":\"[A-Za-z]{2,8}([-_][A-Za-z0-9]{2,8})*\",\"hint\":\"Optional — ISO code, e.g. en\"}"
+      ],
+      [
+        "field",
+        "hashtags",
+        "token",
+        "optional",
+        "bitcoin",
+        "Hashtags",
+        "{\"tag\":\"t\",\"max\":60,\"repeat\":true,\"derived\":true}"
+      ],
+      [
+        "field",
+        "description",
+        "longtext",
+        "optional",
+        "Why is this worth watching?",
+        "Description / review",
+        "{\"tag\":\"content\",\"max\":4000,\"hint\":\"Optional — plain text.\"}"
+      ],
+      [
+        "require-any",
+        "watchUrl",
+        "imdbUrl"
+      ],
+      [
+        "relay",
+        "wss://ephemeral.mantra.press"
+      ]
+    ],
+    "content": "Fields for a bitcoin.mov entry: a Bitcoin movie, documentary, short, interview or series, with at least one link to watch or look it up.",
+    "sig": "ee006eacb1458705cc785f93ed8b62a4a6d4f418666423af8c51e8ceb6f3da76bfd290b9c51f1e3f8c79e4ca88559a58f5552073a7119db02e364ae411cd8046"
+  }
+}

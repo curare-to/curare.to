@@ -1,0 +1,77 @@
+{
+  "kind": 31890,
+  "id": "a9ba950d2378e11fc9eb2f38401914a842e2cc138dec53bb959ecea19cecc9a5",
+  "pubkey": "f87cde3b78b9739f7d19b4dfe5f28a532f67f653bb40df147eb29066472ed72e",
+  "created_at": 1789296147,
+  "tags": [
+    [
+      "d",
+      "the-bitcoin-gospel-2015"
+    ],
+    [
+      "title",
+      "The Bitcoin Gospel"
+    ],
+    [
+      "year",
+      "2015"
+    ],
+    [
+      "type",
+      "documentary"
+    ],
+    [
+      "r",
+      "https://www.youtube.com/watch?v=8zKuoqZLyKg",
+      "watch"
+    ],
+    [
+      "image",
+      "https://img.youtube.com/vi/8zKuoqZLyKg/hqdefault.jpg"
+    ],
+    [
+      "lang",
+      "en"
+    ],
+    [
+      "t",
+      "bitcoin"
+    ],
+    [
+      "t",
+      "documentary"
+    ],
+    [
+      "a",
+      "31889:f87cde3b78b9739f7d19b4dfe5f28a532f67f653bb40df147eb29066472ed72e:bitcoin.mov",
+      "wss://ephemeral.mantra.press",
+      "root"
+    ],
+    [
+      "p",
+      "f87cde3b78b9739f7d19b4dfe5f28a532f67f653bb40df147eb29066472ed72e"
+    ],
+    [
+      "k",
+      "31889"
+    ],
+    [
+      "a",
+      "31888:839c6398d7e79de2b62ed8c5f2dc414e95cad9627f9c8d0bf1a5b08f5d24fafc:the-bitcoin-gospel-2015",
+      "",
+      "mention"
+    ],
+    [
+      "e",
+      "f1eb6dec0b3d2830d49ec1d5127d6e0fa478c4a4826a174953b9ed20d733899f",
+      "",
+      "mention"
+    ],
+    [
+      "p",
+      "839c6398d7e79de2b62ed8c5f2dc414e95cad9627f9c8d0bf1a5b08f5d24fafc"
+    ]
+  ],
+  "content": "VPRO Backlight's portrait of Bitcoin's true believers and the near-religious fervour around a new kind of money.",
+  "sig": "2e0415ef216e50c7c4fbb3b4aea4cfda058e38a7a6d7810756f43206682566fbb79645ffd492328e8346700bb71858e97d252660850a843959de5c9380cb463d"
+}
