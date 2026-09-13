@@ -23,7 +23,7 @@ test('a sub renders at its coordinate: front page, new tab, and a post', async (
   await page.evaluate(() => {
     ;(window as unknown as { __same?: boolean }).__same = true
   })
-  await page.getByRole('link', { name: 'New' }).click()
+  await page.getByRole('link', { name: 'New', exact: true }).click()
   await expect(page).toHaveURL(/\?tab=new$/)
   await expect(page.locator('article')).toHaveCount(12)
   await expect(page.locator('article', { hasText: 'Thing number 12' })).toContainText('pending')

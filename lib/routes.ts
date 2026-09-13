@@ -29,6 +29,12 @@ export type CuratorRef =
 export type ListRef =
   | { by: 'coordinate'; curator: CuratorRef; identifier: string }
   | { by: 'domain'; domain: string }
+  /**
+   * The single-list build: the schema this site itself serves, at a path or
+   * URL — bitcoin.mov's model. `namespace` and `identifier` are filled in
+   * once resolved, so entries can be linked by coordinate.
+   */
+  | { by: 'wellknown'; url: string; namespace?: string; identifier?: string }
 
 export type Route =
   | { kind: 'home' }
@@ -127,9 +133,12 @@ export function curatorSegment(curator: CuratorRef): string {
 }
 
 function listBase(list: ListRef): string {
-  return list.by === 'domain'
-    ? `/r/${enc(list.domain)}`
-    : `/r/${curatorSegment(list.curator)}/${enc(list.identifier)}`
+  if (list.by === 'domain') return `/r/${enc(list.domain)}`
+  if (list.by === 'wellknown') {
+    // Entries of the site's own list link by coordinate, which the shell serves.
+    return list.namespace && list.identifier ? `/r/${nip19.npubEncode(list.namespace)}/${enc(list.identifier)}` : ''
+  }
+  return `/r/${curatorSegment(list.curator)}/${enc(list.identifier)}`
 }
 
 /** Build a path for a route. The inverse of `parseRoute`. */
@@ -138,6 +147,8 @@ export function buildPath(route: Route): string {
     case 'home':
       return '/'
     case 'list':
+      // The site's own list is the home page.
+      if (route.list.by === 'wellknown') return route.tab === 'front' ? '/' : `/?tab=${route.tab}`
       return `${listBase(route.list)}/${route.tab === 'front' ? '' : `?tab=${route.tab}`}`
     case 'entry':
       return `${listBase(route.list)}/${enc(route.entry)}/`

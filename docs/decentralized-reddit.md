@@ -20,7 +20,7 @@ never edited; what each would gain from this work is listed at the end, under
 
 **Being built.** Phases 0–9, in the order given, one commit each, all of them
 in this repository; the table below records where a phase, once built, chose
-differently from what the plan said. Phases 0–5 are built. Every phase is deployable on its own and none reaches
+differently from what the plan said. Phases 0–6 are built. Every phase is deployable on its own and none reaches
 forward, except where the text says a later phase is what makes an earlier one
 honest. Phases 0–2 are the request as
 stated — a sub is a schema, a post is a canonical entry, and people can read
@@ -48,6 +48,9 @@ Everything after is what makes it reddit rather than a directory of lists.
 | 5 | "a sub gains a queue tab" for the curator | the tab shows for anyone signed in — read-only with the note and the app link for everyone but the curator, marked ✎ for the curator — since the plan's "read-only and says why" needs somewhere to say it |
 | 5 | a rejection hides the entry | a rejection older than the version it labels is about an earlier version: an edit puts the entry back in the queue, and the label stands only until the suggester revises. The curator can also withdraw one with a kind 5 |
 | 5 | "the bitcoin.mov curator can run the film list from curare.to" | built and exercised end-to-end with the run's own curator key on a list of its own; the film list's key is not here to try it with, and the interop test shows the events are what their script makes |
+| 6 | "the derivation rule is recorded in the identifier field's `hint`" | as a machine-readable mark, `[rule:<key>]`, at the end of a human sentence, so a client that knows the rule applies it and one that does not can still read what it is |
+| 6 | "a `ws://` relay is refused for a production sub" | unless it is one of the relays the site itself was built against (`NEXT_PUBLIC_DIRECTORY_RELAYS`): a build pointed at a `ws://` directory relay is explicitly a dev or test setup, and the e2e run creates a list on one |
+| 6 | the Catalogue template "generalises bitcoin.mov's rule" | with its own field names (`externalId` → `i`, `watchUrl`, `referenceUrl`) and no derived `t`; bitcoin.mov's schema itself stays as published, and its own rule still fires for it |
 | 2 | "done when … `npm run curate` there can curate it" | proven offline: `test/interop.test.ts` (opt-in, `INTEROP=1`) publishes a suggestion built here to the fake relay seeded with bitcoin.mov's real schema and runs that repository's `curate` script in unsigned mode against it — it emits a canonical template this site verifies. No key, no network, nothing changed there |
 
 ## The mapping

@@ -190,10 +190,28 @@ async function resolveDomain(domain: string, deps: ResolveDeps): Promise<Resolut
   return fromSite
 }
 
+/** The single-list build: the document this site serves, then the relays for a newer revision by the same key. */
+async function resolveWellKnown(url: string, deps: ResolveDeps): Promise<Resolution> {
+  let body: unknown
+  try {
+    const response = await withTimeout(deps.fetch(url, { cache: 'no-cache' }), deps.timeoutMs, 'well-known fetch')
+    if (!response.ok) return unavailable(`this site serves no list (${response.status} at ${url})`)
+    body = await response.json()
+  } catch (error) {
+    return unavailable(`this site's list could not be read (${error instanceof Error ? error.message : 'network error'})`)
+  }
+  const fromSite = schemaFromEvent(body)
+  if (fromSite.status !== 'ready') return unavailable(`this site's well-known document ${fromSite.reason}`)
+  const fromRelays = await lookupOnRelays(fromSite.event.pubkey, fromSite.schema.identifier, [...fromSite.schema.relays, ...deps.relays], deps)
+  if (fromRelays && newest([fromSite.event, fromRelays.event]) === fromRelays.event) return fromRelays
+  return fromSite
+}
+
 /** Resolve a list address. Never throws. */
 export async function resolveSchema(ref: ListRef, overrides: Partial<ResolveDeps> = {}): Promise<Resolution> {
   const deps = { ...defaultDeps(), ...overrides }
   if (ref.by === 'domain') return resolveDomain(ref.domain, deps)
+  if (ref.by === 'wellknown') return resolveWellKnown(ref.url, deps)
 
   const curator = await resolveCurator(ref.curator, deps)
   if (typeof curator !== 'string') return curator
@@ -210,9 +228,9 @@ export async function resolveSchema(ref: ListRef, overrides: Partial<ResolveDeps
 const cache = new Map<string, Promise<Resolution>>()
 
 export function cacheKey(ref: ListRef): string {
-  return ref.by === 'domain'
-    ? `domain:${normalizeDomain(ref.domain)}`
-    : `${ref.curator.type}:${ref.curator.type === 'pubkey' ? ref.curator.pubkey : ref.curator.address}:${ref.identifier}`
+  if (ref.by === 'domain') return `domain:${normalizeDomain(ref.domain)}`
+  if (ref.by === 'wellknown') return `wellknown:${ref.url}`
+  return `${ref.curator.type}:${ref.curator.type === 'pubkey' ? ref.curator.pubkey : ref.curator.address}:${ref.identifier}`
 }
 
 /**

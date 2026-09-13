@@ -9,7 +9,7 @@ import {
   type CuratedSuggestionValues,
   type FieldDef,
 } from '@/lib/protocol/curated'
-import { slugIdentifier } from '@/lib/protocol/derive'
+import { deriveIdentifier, deriveInputOf, ruleOf, slugIdentifier } from '@/lib/protocol/derive'
 
 /* ------------------------------------------------------------------ *
  * The form's logic, without the form: what to ask for, what is wrong,
@@ -45,15 +45,19 @@ export function identifierField(schema: CuratedSchema) {
 
 /**
  * What the entry's `d` will be. A schema whose d field is `derived` leaves it
- * to the site — the slug rule, until Phase 6's templates — and the form never
- * prompts for it. A schema that does not mark it derived wants the person to
- * supply it (the directory's "list coordinate" is that shape), so it is an
- * input like any other and its value is the identifier.
+ * to the site, which applies the rule the schema records in that field's
+ * hint (`[rule:…]`, lib/protocol/derive.ts) — the title's slug when it
+ * records none — and the form never prompts for it. A schema that does not
+ * mark it derived wants the person to supply it (the directory's "list
+ * coordinate" is that shape), so it is an input like any other and its value
+ * is the identifier. `pubkey` feeds the rules that key on the author.
  */
-export function identifierFor(schema: CuratedSchema, values: CuratedSuggestionValues): string {
+export function identifierFor(schema: CuratedSchema, values: CuratedSuggestionValues, pubkey: string | null = null): string {
   const field = identifierField(schema)
   if (field && !field.config.derived) return (values[field.name] ?? '').trim()
-  return slugIdentifier(titleOf(values, schema))
+  const rule = ruleOf(schema)
+  if (rule === 'title' || !pubkey) return rule === 'title' ? slugIdentifier(titleOf(values, schema)) : slugIdentifier(titleOf(values, schema))
+  return deriveIdentifier(rule, deriveInputOf(schema, values, pubkey))
 }
 
 /** The fields a form prompts for, and which of them are required — a require-any group is not. */
@@ -82,7 +86,7 @@ export function prepareSuggestion(
   options: { pubkey: string | null; identifier?: string; now?: number },
 ): Prepared {
   const errors = validateValues(values, schema, { pubkey: options.pubkey ?? undefined })
-  const identifier = options.identifier ?? identifierFor(schema, values)
+  const identifier = options.identifier ?? identifierFor(schema, values, options.pubkey)
   if (Object.keys(errors).length > 0 || !options.pubkey) {
     // Nothing can be signed without a key, whatever the list's visibility.
     if (!options.pubkey && !errors.visibility) errors.visibility = 'Sign in to suggest to this list.'

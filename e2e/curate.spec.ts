@@ -49,7 +49,7 @@ test('the curator works the queue: approve, reject, edit-then-approve, re-curate
   await expect(page.locator('article', { hasText: 'Mod thing one' })).toBeVisible()
 
   // New hides the rejected one unless asked; its page says why.
-  await page.getByRole('link', { name: 'New' }).click()
+  await page.getByRole('link', { name: 'New', exact: true }).click()
   await expect(page.locator('article', { hasText: 'Mod thing two' })).toHaveCount(0)
   await page.getByRole('button', { name: 'Show 1 rejected' }).click()
   await expect(page.locator('article', { hasText: 'Mod thing two' })).toHaveCount(1)

@@ -59,7 +59,7 @@ export function EntryForm({
   const canonical = mode === 'canonical'
   const blocked = pubkey ? (canonical ? !canCurate(schema, pubkey) : !canSuggest(schema, pubkey)) : false
   const editingIdentifier = (editing ?? source)?.tags.find((t) => t[0] === 'd')?.[1] ?? null
-  const derived = editingIdentifier ?? identifierFor(schema, values)
+  const derived = editingIdentifier ?? identifierFor(schema, values, pubkey)
   const duplicate = useMemo(
     () => (editing ? null : (groups.find((g) => g.identifier === derived) ?? null)),
     [groups, derived, editing],

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import type { Event } from 'nostr-tools/pure'
 import { canSuggest, type CuratedSchema } from '@/lib/protocol/curated'
 import { useList } from '@/lib/store/listStore'
 import { useSession } from '@/lib/store/session'
@@ -34,11 +35,13 @@ export function ListPage({ list, tab, entry }: { list: ListRef; tab: ListTab; en
       />
     )
   }
-  return <ResolvedList schema={resolved.schema} list={list} tab={tab} entry={entry} />
+  return <ResolvedList schema={resolved.schema} event={resolved.event} list={list} tab={tab} entry={entry} />
 }
 
-function ResolvedList({ schema, list, tab, entry }: { schema: CuratedSchema; list: ListRef; tab: ListTab; entry?: string }) {
-  const domainVerified = list.by === 'domain'
+function ResolvedList({ schema, event, list: given, tab, entry }: { schema: CuratedSchema; event: Event; list: ListRef; tab: ListTab; entry?: string }) {
+  // The site's own list links its entries by coordinate once the schema is known.
+  const list: ListRef = given.by === 'wellknown' ? { ...given, namespace: schema.namespace, identifier: schema.identifier } : given
+  const domainVerified = given.by === 'domain'
   const session = useSession()
   useEffect(() => {
     document.title = `${listDisplayName(schema, list)} · curare.to`
@@ -66,17 +69,19 @@ function ResolvedList({ schema, list, tab, entry }: { schema: CuratedSchema; lis
       </>
     )
   }
-  return <LiveList schema={schema} list={list} tab={tab} entry={entry} domainVerified={domainVerified} />
+  return <LiveList schema={schema} event={event} list={list} tab={tab} entry={entry} domainVerified={domainVerified} />
 }
 
 function LiveList({
   schema,
+  event,
   list,
   tab,
   entry,
   domainVerified,
 }: {
   schema: CuratedSchema
+  event: Event
   list: ListRef
   tab: ListTab
   entry?: string
@@ -96,7 +101,7 @@ function LiveList({
             <PostList schema={schema} snapshot={snapshot} list={list} tab={tab} />
           )}
         </div>
-        <ListSidebar schema={schema} snapshot={snapshot} />
+        <ListSidebar schema={schema} event={event} snapshot={snapshot} />
       </div>
     </>
   )
@@ -104,6 +109,7 @@ function LiveList({
 
 function describeRef(list: ListRef): string {
   if (list.by === 'domain') return list.domain
+  if (list.by === 'wellknown') return 'this site:'
   const who = list.curator.type === 'pubkey' ? `${list.curator.pubkey.slice(0, 8)}…` : list.curator.address
   return `"${list.identifier}" by ${who}:`
 }

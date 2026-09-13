@@ -35,6 +35,27 @@ LIVE=1 npm test    # also fetch bitcoin.mov's schema over HTTPS and verify it
 npm run typecheck
 ```
 
+## Your own site
+
+Any list can be a site of its own, the way bitcoin.mov is: this repository
+is the template.
+
+1. On the list's page, *Download for your own domain* saves the signed schema
+   as `nostr.json` — the event exactly as published, nothing wrapped around it.
+2. Fork this repository and commit that file at
+   `public/.well-known/curare.to/nostr.json`. It holds only public, signed
+   data, and the deploy builds from the repository, so it has to be committed.
+3. In `.github/workflows/pages.yml`, give the build
+   `NEXT_PUBLIC_SINGLE_LIST: /.well-known/curare.to/nostr.json`. The home page
+   is then the list's front page, `?tab=new` its queue, and the directory and
+   *New list* are gone; `/r/…` and `/u/…` still work.
+4. Point a domain at GitHub Pages (Settings → Pages → Custom domain) and
+   enable Pages with *GitHub Actions* as the source — bitcoin.mov's
+   `SEEDING.md` walks through the DNS records and the certificate.
+
+Once the domain serves the file, `curare.to/r/<your domain>/` resolves it,
+and the two sites are two clients of one list. Nothing on the relays changes.
+
 ## Build & deploy
 
 ```bash

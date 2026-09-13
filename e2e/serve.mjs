@@ -6,6 +6,9 @@ import path from 'node:path'
 
 const root = path.resolve(process.argv[2] ?? 'out')
 const port = Number(process.argv[3] ?? 3000)
+// An optional directory checked first — where the single-list run puts the
+// well-known document, so nothing is written into public/.
+const overlay = process.argv[4] ? path.resolve(process.argv[4]) : null
 const types = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript',
@@ -22,7 +25,12 @@ http
     if (pathname.endsWith('/')) pathname += 'index.html'
     let file = path.join(root, pathname)
     let status = 200
-    if (!file.startsWith(root) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
+    if (overlay) {
+      const over = path.join(overlay, pathname)
+      if (over.startsWith(overlay) && fs.existsSync(over) && !fs.statSync(over).isDirectory()) file = over
+    }
+    if (!file.startsWith(root) && !(overlay && file.startsWith(overlay))) file = path.join(root, '404.html')
+    if (!fs.existsSync(file) || fs.statSync(file).isDirectory()) {
       file = path.join(root, '404.html')
       status = 404
     }

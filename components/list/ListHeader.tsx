@@ -8,6 +8,7 @@ import { useSession } from '@/lib/store/session'
 /** Where the suggest form for a list lives — a static page, reached by a full navigation. */
 export function suggestHref(list: ListRef, schema: CuratedSchema, edit?: string): string {
   const to = list.by === 'domain' ? list.domain : `31889:${schema.namespace}:${schema.identifier}`
+  void list
   return withBase(`/submit/?to=${encodeURIComponent(to)}${edit ? `&edit=${encodeURIComponent(edit)}` : ''}`)
 }
 
