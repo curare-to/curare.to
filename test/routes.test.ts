@@ -10,6 +10,7 @@ describe('routes', () => {
     ['/', { kind: 'home' }],
     [`/r/${NPUB}/bitcoin.mov/`, { kind: 'list', list: { by: 'coordinate', curator: { type: 'pubkey', pubkey: PK }, identifier: 'bitcoin.mov' }, tab: 'front' }],
     [`/r/${NPUB}/bitcoin.mov/?tab=new`, { kind: 'list', list: { by: 'coordinate', curator: { type: 'pubkey', pubkey: PK }, identifier: 'bitcoin.mov' }, tab: 'new' }],
+    [`/r/${NPUB}/bitcoin.mov/?tab=queue`, { kind: 'list', list: { by: 'coordinate', curator: { type: 'pubkey', pubkey: PK }, identifier: 'bitcoin.mov' }, tab: 'queue' }],
     [`/r/${NPUB}/bitcoin.mov/imdb%3Att2821314/`, { kind: 'entry', list: { by: 'coordinate', curator: { type: 'pubkey', pubkey: PK }, identifier: 'bitcoin.mov' }, entry: 'imdb:tt2821314' }],
     ['/r/_@bitcoin.mov/bitcoin.mov/', { kind: 'list', list: { by: 'coordinate', curator: { type: 'nip05', address: '_@bitcoin.mov' }, identifier: 'bitcoin.mov' }, tab: 'front' }],
     ['/r/bitcoin.mov/', { kind: 'list', list: { by: 'domain', domain: 'bitcoin.mov' }, tab: 'front' }],

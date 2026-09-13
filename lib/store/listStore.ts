@@ -14,7 +14,8 @@ import {
   verifyCuratedSuggestion,
   type CuratedSchema,
 } from '@/lib/protocol/curated'
-import { identifierOf, postGroups, type PostGroup } from '@/lib/protocol/group'
+import { identifierOf, postGroups, type PostGroup, type Rejection } from '@/lib/protocol/group'
+import { DELETION_KIND, deletedIds, LABEL_KIND, LABEL_NAMESPACE, parseRejection } from '@/lib/protocol/labels'
 
 /* ------------------------------------------------------------------ *
  * One sub's events, live.
@@ -47,6 +48,8 @@ export interface ListSnapshot {
   dropped: number
   /** Where this store is reading from. */
   relays: string[]
+  /** The curator's standing rejections, by suggestion coordinate. */
+  rejections: Rejection[]
 }
 
 export interface ListStoreOptions {
@@ -69,6 +72,8 @@ export class ListStore {
 
   private suggestions = new Map<string, Event>()
   private canonicals = new Map<string, Event>()
+  private rejections = new Map<string, Rejection>()
+  private deleted = new Set<string>()
   private dropped = 0
   private loading = true
   private listeners = new Set<() => void>()
@@ -128,7 +133,8 @@ export class ListStore {
 
   /** Show a just-published event at once, before the relay echoes it back. */
   pushEvent = (event: Event): void => {
-    if (this.upsert(event)) this.scheduleFlush()
+    const changed = event.kind === LABEL_KIND || event.kind === DELETION_KIND ? this.note(event) : this.upsert(event)
+    if (changed) this.scheduleFlush()
   }
 
   /** Verify and store, keeping the newest version per coordinate. True when something changed. */
@@ -145,6 +151,30 @@ export class ListStore {
       return this.keep(this.canonicals, d, event)
     }
     return this.drop()
+  }
+
+  /** The curator's labels and deletions: a rejection stands until curated after all, or deleted. */
+  private note(event: Event): boolean {
+    if (event.pubkey !== this.schema.namespace) return false
+    if (event.kind === DELETION_KIND) {
+      let changed = false
+      for (const id of deletedIds(event)) {
+        this.deleted.add(id)
+        for (const [coordinate, rejection] of this.rejections) {
+          if (rejection.id === id) {
+            this.rejections.delete(coordinate)
+            changed = true
+          }
+        }
+      }
+      return changed
+    }
+    const rejection = parseRejection(event, this.schema.namespace)
+    if (!rejection || this.deleted.has(rejection.id)) return false
+    const existing = this.rejections.get(rejection.coordinate)
+    if (existing && existing.createdAt >= rejection.createdAt) return false
+    this.rejections.set(rejection.coordinate, rejection)
+    return true
   }
 
   private drop(): boolean {
@@ -180,12 +210,16 @@ export class ListStore {
     const filters: Filter[] = [
       { kinds: [CURATED_SUGGESTION_KIND], '#a': [address], limit: 500 },
       { kinds: [CURATED_CANONICAL_KIND], authors: [this.schema.namespace], '#a': [address], limit: 500 },
+      // The curator's rejections, and the deletions that undo them.
+      { kinds: [LABEL_KIND], authors: [this.schema.namespace], '#L': [LABEL_NAMESPACE], limit: 500 },
+      { kinds: [DELETION_KIND], authors: [this.schema.namespace], '#k': [String(LABEL_KIND)], limit: 500 },
     ]
     this.pendingEose = filters.length
     this.subs = filters.map((filter) =>
       this.pool.subscribeMany(this.relays, filter, {
         onevent: (event) => {
-          if (this.upsert(event)) this.scheduleFlush()
+          const changed = event.kind === LABEL_KIND || event.kind === DELETION_KIND ? this.note(event) : this.upsert(event)
+          if (changed) this.scheduleFlush()
         },
         oneose: () => {
           this.pendingEose -= 1
@@ -238,14 +272,16 @@ export class ListStore {
   private build(): ListSnapshot {
     const suggestions = [...this.suggestions.values()].sort(byNewest)
     const canonicals = [...this.canonicals.values()].sort(byNewest)
+    const rejections = [...this.rejections.values()]
     return {
       schema: this.schema,
       loading: this.loading,
       suggestions,
       canonicals,
-      groups: postGroups(this.schema, { suggestions, canonicals }),
+      groups: postGroups(this.schema, { suggestions, canonicals, rejections }),
       dropped: this.dropped,
       relays: this.relays,
+      rejections,
     }
   }
 }

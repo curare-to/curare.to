@@ -11,6 +11,7 @@ import { ListHeader, listDisplayName } from './ListHeader'
 import { ListSidebar } from './ListSidebar'
 import { PostList } from './PostList'
 import { EntryPage } from './EntryPage'
+import { ModQueue } from '@/components/mod/ModQueue'
 
 /**
  * /r/<…>/ and /r/<…>/<entry>/: resolve the address to a verified schema,
@@ -89,6 +90,8 @@ function LiveList({
         <div className="min-w-0">
           {entry ? (
             <EntryPage schema={schema} snapshot={snapshot} list={list} entry={entry} />
+          ) : tab === 'queue' ? (
+            <ModQueue schema={schema} snapshot={snapshot} list={list} />
           ) : (
             <PostList schema={schema} snapshot={snapshot} list={list} tab={tab} />
           )}

@@ -150,3 +150,75 @@ describe('ListStore', () => {
     store.close()
   })
 })
+
+describe('ListStore rejections', () => {
+  it('hides a rejected suggestion from the groups until it is curated or the label is deleted', async () => {
+    const relay = await FakeRelay.start()
+    const pool = new SimplePool()
+    const curator = pubkeyOf('curator')
+    const address = `31889:${curator}:things`
+    const schema = parseCuratedSchemaEvent(
+      signedBy('curator', {
+        kind: 31889,
+        tags: [
+          ['d', 'things'], ['title', 't'], ['name', 'things'], ['description', 'Things.'], ['visibility', 'public'],
+          ['field', 'identifier', 'token', 'required', '', 'Identifier', '{"tag":"d","max":80}'],
+          ['field', 'title', 'text', 'required', '', 'Title', '{"max":200}'],
+          ['relay', relay.url],
+        ],
+        content: 'Things.',
+        created_at: 100,
+      }),
+    )!
+    const suggestion = signedBy('bob', {
+      kind: 31888,
+      tags: [['d', 'x'], ['title', 'X'], ['a', address, '', 'root'], ['p', curator], ['k', '31889']],
+      content: '',
+      created_at: 200,
+    })
+    const { buildRejectionTemplate, buildDeletionTemplate } = await import('@/lib/protocol/labels')
+    const label = signedBy('curator', buildRejectionTemplate({ suggestion, reason: 'no', createdAt: 300 })!)
+    const strangerLabel = signedBy('carol', buildRejectionTemplate({ suggestion, reason: 'me too', createdAt: 300 })!)
+    relay.seed(suggestion, label, strangerLabel)
+
+    const store = new ListStore(schema, { pool, loadingTimeoutMs: 3000 })
+    store.subscribe(() => {})
+    await settle()
+    let group = store.getSnapshot().groups.find((g) => g.identifier === 'x')!
+    expect(group.rejected).toBe(true)
+    expect(group.rejections.map((r) => r.reason)).toEqual(['no'])
+
+    // The suggester edits after the rejection: the label was about the earlier version.
+    const edited = signedBy('bob', {
+      kind: 31888,
+      tags: [['d', 'x'], ['title', 'X, revised'], ['a', address, '', 'root'], ['p', curator], ['k', '31889']],
+      content: '',
+      created_at: 400,
+    })
+    await Promise.all(pool.publish([relay.url], edited))
+    await settle()
+    group = store.getSnapshot().groups.find((g) => g.identifier === 'x')!
+    expect(group.rejected).toBe(false)
+
+    // Rejected again, then the label deleted.
+    const again = signedBy('curator', buildRejectionTemplate({ suggestion: edited, reason: 'still no', createdAt: 500 })!)
+    store.pushEvent(again)
+    await settle(200)
+    expect(store.getSnapshot().groups.find((g) => g.identifier === 'x')!.rejected).toBe(true)
+    store.pushEvent(signedBy('curator', buildDeletionTemplate([again], '', 600)))
+    await settle(200)
+    expect(store.getSnapshot().groups.find((g) => g.identifier === 'x')!.rejected).toBe(false)
+
+    // Curated after all: a canonical entry stands whatever the labels say.
+    store.pushEvent(again)
+    store.pushEvent(signedBy('curator', { kind: 31890, tags: [['d', 'x'], ['title', 'X'], ['a', address, '', 'root'], ['p', curator], ['k', '31889']], content: '', created_at: 700 }))
+    await settle(200)
+    group = store.getSnapshot().groups.find((g) => g.identifier === 'x')!
+    expect(group.state).toBe('curated')
+    expect(group.rejected).toBe(false)
+
+    store.close()
+    pool.close([relay.url])
+    await relay.close()
+  })
+})

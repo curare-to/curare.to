@@ -38,9 +38,14 @@ export function PostList({
   const session = useSession()
   const weighting = useWeighting(schema)
 
+  const [showRejected, setShowRejected] = useState(false)
+  const rejectedCount = useMemo(() => snapshot.groups.filter((g) => g.rejected).length, [snapshot.groups])
   const base = useMemo(
-    () => (tab === 'front' ? snapshot.groups.filter((g) => g.state === 'curated') : snapshot.groups),
-    [snapshot.groups, tab],
+    () =>
+      tab === 'front'
+        ? snapshot.groups.filter((g) => g.state === 'curated')
+        : snapshot.groups.filter((g) => showRejected || !g.rejected),
+    [snapshot.groups, tab, showRejected],
   )
   const page = useMemo(() => base.slice(0, 120), [base])
   const countFor = useCommentCounts(schema, page, snapshot.relays)
@@ -89,6 +94,11 @@ export function PostList({
               </button>
             ))}
           </div>
+        ) : null}
+        {tab === 'new' && rejectedCount > 0 ? (
+          <button type="button" onClick={() => setShowRejected((v) => !v)} className={chip(showRejected)}>
+            {showRejected ? 'Hide' : 'Show'} {rejectedCount} rejected
+          </button>
         ) : null}
         <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Which votes count">
           <span className="text-muted">Count:</span>

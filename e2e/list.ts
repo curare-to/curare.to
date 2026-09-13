@@ -140,3 +140,58 @@ export function commentPost(): Event {
     created_at: T0 + 1000,
   })
 }
+
+/**
+ * A list for the curation run: three pending posts, one curated whose
+ * suggester edited it afterwards. The main list's counts stay untouched.
+ */
+export const MOD_LIST = 'mod-things'
+export const MOD_ADDRESS = `31889:${CURATOR}:${MOD_LIST}`
+
+export function modSchemaEvent(): Event {
+  return signedBy('e2e curator', {
+    kind: 31889,
+    tags: [
+      ['d', MOD_LIST],
+      ['title', 'mod things suggestion'],
+      ['name', 'Moderated things'],
+      ['description', 'A queue to work through.'],
+      ['visibility', 'public'],
+      ['relay', RELAY],
+      ['field', 'identifier', 'token', 'required', '', 'Identifier', '{"tag":"d","max":80,"derived":true}'],
+      ['field', 'title', 'text', 'required', '', 'Title', '{"max":200}'],
+      ['field', 'link', 'url', 'optional', 'https://…', 'Link', '{"tag":"r","marker":"link","max":500}'],
+      ['field', 'flair', 'enum', 'optional', '', 'Flair', '{"options":["tool","essay","talk"]}'],
+    ],
+    content: 'A queue to work through.',
+    created_at: T0,
+  })
+}
+
+export function modPosts(): Event[] {
+  const post = (author: string, n: number, title: string, created_at: number) =>
+    signedBy(author, {
+      kind: 31888,
+      tags: [['d', `mod-${n}`], ['title', title], ['r', `https://example.org/mod/${n}`, 'link'], ['flair', 'tool'], ['a', MOD_ADDRESS, RELAY, 'root'], ['p', CURATOR], ['k', '31889']],
+      content: '',
+      created_at,
+    })
+  const one = post('e2e alice', 1, 'Mod thing one', T0 + 100)
+  const two = post('e2e bob', 2, 'Mod thing two', T0 + 200)
+  const three = post('e2e carol', 3, 'Mod thing three', T0 + 300)
+  const fourOriginal = post('e2e alice', 4, 'Mod thing four', T0 + 400)
+  const fourCanonical = signedBy('e2e curator', {
+    kind: 31890,
+    tags: [
+      ...fourOriginal.tags.filter((t) => t[0] !== 'p' || t[1] === CURATOR),
+      ['a', `31888:${fourOriginal.pubkey}:mod-4`, RELAY, 'mention'],
+      ['e', fourOriginal.id, RELAY, 'mention'],
+      ['p', fourOriginal.pubkey],
+    ],
+    content: '',
+    created_at: T0 + 450,
+  })
+  // The suggester edits after curation: the queue flags it with a diff.
+  const fourEdited = post('e2e alice', 4, 'Mod thing four, corrected', T0 + 500)
+  return [one, two, three, fourCanonical, fourEdited]
+}

@@ -37,7 +37,7 @@ export type Route =
   | { kind: 'user'; pubkey: string }
   | { kind: 'unknown'; path: string }
 
-export type ListTab = 'front' | 'new'
+export type ListTab = 'front' | 'new' | 'queue'
 
 const NIP05 = /^[a-z0-9._-]+@[a-z0-9.-]+\.[a-z]{2,}$/i
 
@@ -85,7 +85,7 @@ export function parseRoute(
 ): Route {
   const parts = segments(pathname, basePath)
   const params = new URLSearchParams(search)
-  const tab: ListTab = params.get('tab') === 'new' ? 'new' : 'front'
+  const tab: ListTab = params.get('tab') === 'new' ? 'new' : params.get('tab') === 'queue' ? 'queue' : 'front'
 
   if (parts.length === 0) return { kind: 'home' }
 
@@ -138,7 +138,7 @@ export function buildPath(route: Route): string {
     case 'home':
       return '/'
     case 'list':
-      return `${listBase(route.list)}/${route.tab === 'new' ? '?tab=new' : ''}`
+      return `${listBase(route.list)}/${route.tab === 'front' ? '' : `?tab=${route.tab}`}`
     case 'entry':
       return `${listBase(route.list)}/${enc(route.entry)}/`
     case 'user':

@@ -2,9 +2,10 @@
 
 import { useMemo, useState, type FormEvent } from 'react'
 import type { Event } from 'nostr-tools/pure'
-import { canSuggest, type CuratedSchema, type CuratedSuggestionValues } from '@/lib/protocol/curated'
+import { canCurate, canSuggest, type CuratedSchema, type CuratedSuggestionValues } from '@/lib/protocol/curated'
 import type { PostGroup } from '@/lib/protocol/group'
 import { emptyValues, identifierFor, prepareSuggestion, promptedFields, valuesOfEntry } from '@/lib/entry/form'
+import { prepareCanonical } from '@/lib/entry/curate'
 import { Nip07Error, signAndPublish } from '@/lib/nostr/nip07'
 import { sessionStore, useSession } from '@/lib/store/session'
 import { getListStore } from '@/lib/store/listStore'
@@ -23,22 +24,31 @@ export interface Published {
  * The schema-driven form: bitcoin.mov's SubmitForm with the field names read
  * off the schema. `editing` reuses an entry's `d` so the new event replaces
  * it; `groups` lets the form warn before a second version of an existing post.
+ * In `canonical` mode it signs a kind 31890 for the curator — from `source`,
+ * the suggestion being corrected on the way through, or from nothing.
  */
 export function EntryForm({
   schema,
   editing,
   groups,
   onPublished,
+  mode = 'suggest',
+  source = null,
+  onCancel,
 }: {
   schema: CuratedSchema
   editing?: Event | null
   groups: PostGroup[]
   onPublished: (published: Published) => void
+  mode?: 'suggest' | 'canonical'
+  source?: Event | null
+  onCancel?: () => void
 }) {
   const session = useSession()
   const fields = promptedFields(schema)
+  const prefill = editing ?? source
   const [values, setValues] = useState<CuratedSuggestionValues>(() =>
-    editing ? valuesOfEntry(editing, schema) : emptyValues(schema),
+    prefill ? valuesOfEntry(prefill, schema) : emptyValues(schema),
   )
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [formError, setFormError] = useState<string | null>(null)
@@ -46,8 +56,9 @@ export function EntryForm({
   const [acknowledgedDuplicate, setAcknowledgedDuplicate] = useState(false)
 
   const pubkey = session.pubkey
-  const blocked = pubkey ? !canSuggest(schema, pubkey) : false
-  const editingIdentifier = editing ? (editing.tags.find((t) => t[0] === 'd')?.[1] ?? null) : null
+  const canonical = mode === 'canonical'
+  const blocked = pubkey ? (canonical ? !canCurate(schema, pubkey) : !canSuggest(schema, pubkey)) : false
+  const editingIdentifier = (editing ?? source)?.tags.find((t) => t[0] === 'd')?.[1] ?? null
   const derived = editingIdentifier ?? identifierFor(schema, values)
   const duplicate = useMemo(
     () => (editing ? null : (groups.find((g) => g.identifier === derived) ?? null)),
@@ -63,15 +74,18 @@ export function EntryForm({
     event.preventDefault()
     setFormError(null)
     const signer = pubkey ?? (await sessionStore.signIn())
-    const prepared = prepareSuggestion(schema, values, { pubkey: signer, identifier: editingIdentifier ?? undefined })
+    const prepared = canonical
+      ? { ...prepareCanonical(schema, values, { curator: signer, identifier: derived, source }), identifier: derived }
+      : prepareSuggestion(schema, values, { pubkey: signer, identifier: editingIdentifier ?? undefined })
     setErrors(prepared.errors)
     if (!prepared.template) {
-      if (prepared.errors.visibility) setFormError(prepared.errors.visibility)
+      const general = prepared.errors.visibility ?? prepared.errors.curator
+      if (general) setFormError(general)
       return
     }
     // The duplicate check must not race the relays: wait for the first read.
     const loaded = await getListStore(schema).whenLoaded()
-    const existing = editing ? null : (loaded.groups.find((g) => g.identifier === prepared.identifier) ?? null)
+    const existing = editing || canonical ? null : (loaded.groups.find((g) => g.identifier === prepared.identifier) ?? null)
     if (existing && !acknowledgedDuplicate) {
       setAcknowledgedDuplicate(true)
       return
@@ -110,7 +124,7 @@ export function EntryForm({
 
       <div className="rounded-md border border-line bg-surface-2 px-3 py-2 text-xs text-muted">
         Identifier: <code className="font-mono text-ink">{derived || '…'}</code>
-        {editing ? ' — kept, so this replaces the entry.' : ' — the same identifier is the same post.'}
+        {editing ? ' — kept, so this replaces the entry.' : source ? ' — kept from the suggestion; curating again revises in place.' : ' — the same identifier is the same post.'}
       </div>
 
       {duplicate ? (
@@ -126,7 +140,9 @@ export function EntryForm({
 
       {blocked ? (
         <p className="text-sm text-danger">
-          This list is {schema.visibility}; your key is not one it accepts suggestions from.
+          {canonical
+            ? 'Only the key that published this schema may curate; a team curates in the Curare app.'
+            : `This list is ${schema.visibility}; your key is not one it accepts suggestions from.`}
         </p>
       ) : null}
       {formError ? <p className="text-sm text-danger">{formError}</p> : null}
@@ -137,8 +153,13 @@ export function EntryForm({
           disabled={submitting || blocked}
           className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-ink disabled:opacity-50"
         >
-          {submitting ? 'Signing…' : editing ? 'Publish the edit' : pubkey ? 'Sign and publish' : 'Sign in and publish'}
+          {submitting ? 'Signing…' : canonical ? 'Sign and curate' : editing ? 'Publish the edit' : pubkey ? 'Sign and publish' : 'Sign in and publish'}
         </button>
+        {onCancel ? (
+          <button type="button" onClick={onCancel} className="text-sm text-muted hover:text-ink">
+            Cancel
+          </button>
+        ) : null}
         <span className="text-xs text-muted">
           Signed in your extension; sent to {schema.relays.length > 0 ? schema.relays.join(', ') : 'the directory relays'}
           {session.writeRelays.length > 0 ? ` and ${session.writeRelays.length} of your own` : ''}.

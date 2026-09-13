@@ -87,6 +87,12 @@ export function EntryPage({
             </a>
           ) : null}
         </p>
+        {group.rejections.length > 0 && !group.canonical ? (
+          <p className="rounded-md border border-note bg-note-soft px-3 py-2 text-sm text-ink">
+            The curator rejected this suggestion{group.rejections[0].reason ? `: “${group.rejections[0].reason}”` : '.'}
+            {mine ? ' Editing it puts it back in the queue.' : ''}
+          </p>
+        ) : null}
         {mine && group.canonical && mine.created_at > group.canonical.created_at ? (
           <p className="text-xs text-muted">
             You edited this after the curator curated it; the front page keeps their version until they curate again.

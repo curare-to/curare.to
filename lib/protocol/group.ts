@@ -49,6 +49,18 @@ export interface PostGroup {
   coordinates: string[]
   /** Every event id in the group, for the `#e` filter reports are read with. */
   ids: string[]
+  /** The curator's rejection labels on the group's suggestions, by coordinate. */
+  rejections: Rejection[]
+  /** True when nothing in the group stands: no canonical entry and every suggestion rejected. */
+  rejected: boolean
+}
+
+export interface Rejection {
+  id: string
+  coordinate: string
+  pubkey: string
+  reason: string
+  createdAt: number
 }
 
 /** The `d` tag of an addressable event, or null. */
@@ -82,8 +94,11 @@ const byNewest = (a: Event, b: Event): number =>
  */
 export function postGroups(
   schema: CuratedSchema,
-  events: { suggestions: Iterable<Event>; canonicals: Iterable<Event> },
+  events: { suggestions: Iterable<Event>; canonicals: Iterable<Event>; rejections?: Iterable<Rejection> },
 ): PostGroup[] {
+  const rejectionByCoordinate = new Map<string, Rejection>()
+  for (const rejection of events.rejections ?? []) rejectionByCoordinate.set(rejection.coordinate, rejection)
+
   const suggestionsByCoordinate = new Map<string, Event>()
   const suggestionsById = new Map<string, Event[]>()
   for (const event of events.suggestions) {
@@ -130,11 +145,15 @@ export function postGroups(
 
     const coordinates = [canonicalAddress(schema, identifier)]
     const ids: string[] = []
+    const rejections: Rejection[] = []
     if (canonical) ids.push(canonical.id)
     for (const suggestion of suggestions) {
       const coordinate = coordinateOf(suggestion)
       if (coordinate && !coordinates.includes(coordinate)) coordinates.push(coordinate)
       ids.push(suggestion.id)
+      const rejection = coordinate ? rejectionByCoordinate.get(coordinate) : undefined
+      // A rejection older than the version it labels was about an earlier version.
+      if (rejection && rejection.createdAt >= suggestion.created_at) rejections.push(rejection)
     }
 
     groups.push({
@@ -145,6 +164,8 @@ export function postGroups(
       state: canonical ? 'curated' : 'pending',
       coordinates,
       ids,
+      rejections,
+      rejected: !canonical && suggestions.length > 0 && rejections.length === suggestions.length,
     })
   }
 

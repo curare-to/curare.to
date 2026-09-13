@@ -3,6 +3,7 @@
 import type { CuratedSchema } from '@/lib/protocol/curated'
 import { A, withBase } from '@/lib/router'
 import { buildPath, type ListRef, type ListTab } from '@/lib/routes'
+import { useSession } from '@/lib/store/session'
 
 /** Where the suggest form for a list lives — a static page, reached by a full navigation. */
 export function suggestHref(list: ListRef, schema: CuratedSchema, edit?: string): string {
@@ -27,9 +28,12 @@ export function ListHeader({
   tab: ListTab | null
   domainVerified: boolean
 }) {
+  const session = useSession()
   const tabs: { key: ListTab; label: string }[] = [
     { key: 'front', label: 'Front page' },
     { key: 'new', label: 'New' },
+    // The queue is where curating happens; anyone signed in may look, only the curator may act.
+    ...(session.pubkey ? [{ key: 'queue' as const, label: session.pubkey === schema.namespace ? 'Queue ✎' : 'Queue' }] : []),
   ]
   return (
     <header className="border-b border-line bg-surface">

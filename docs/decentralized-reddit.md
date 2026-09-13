@@ -20,7 +20,7 @@ never edited; what each would gain from this work is listed at the end, under
 
 **Being built.** Phases 0–9, in the order given, one commit each, all of them
 in this repository; the table below records where a phase, once built, chose
-differently from what the plan said. Phases 0–4 are built. Every phase is deployable on its own and none reaches
+differently from what the plan said. Phases 0–5 are built. Every phase is deployable on its own and none reaches
 forward, except where the text says a later phase is what makes an earlier one
 honest. Phases 0–2 are the request as
 stated — a sub is a schema, a post is a canonical entry, and people can read
@@ -45,6 +45,9 @@ Everything after is what makes it reddit rather than a directory of lists.
 | 4 | "votes from follows weigh 1, everything else 0.2, and 0 is a click away" | three modes rather than a number: *Everyone* (the raw count), *Trusted* (follows 1, the rest 0.2) and *Only trusted* (the rest 0). The hover on every score says which count it is and what the other would be |
 | 4 | one vote per pubkey, the newest winning | timestamps are seconds, so a change of mind within the same second is stamped a second later; otherwise the tie broke on id and a reversal could lose |
 | 4 | "*best*, for comments, is the Wilson lower bound" | and comments can be voted on: the same reaction store, by comment id, orders the thread |
+| 5 | "a sub gains a queue tab" for the curator | the tab shows for anyone signed in — read-only with the note and the app link for everyone but the curator, marked ✎ for the curator — since the plan's "read-only and says why" needs somewhere to say it |
+| 5 | a rejection hides the entry | a rejection older than the version it labels is about an earlier version: an edit puts the entry back in the queue, and the label stands only until the suggester revises. The curator can also withdraw one with a kind 5 |
+| 5 | "the bitcoin.mov curator can run the film list from curare.to" | built and exercised end-to-end with the run's own curator key on a list of its own; the film list's key is not here to try it with, and the interop test shows the events are what their script makes |
 | 2 | "done when … `npm run curate` there can curate it" | proven offline: `test/interop.test.ts` (opt-in, `INTEROP=1`) publishes a suggestion built here to the fake relay seeded with bitcoin.mov's real schema and runs that repository's `curate` script in unsigned mode against it — it emits a canonical template this site verifies. No key, no network, nothing changed there |
 
 ## The mapping
