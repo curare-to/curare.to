@@ -28,6 +28,19 @@ const LOCAL = ['ws://localhost:10547'] as const
 
 const PUBLIC = ['wss://ephemeral.mantra.press'] as const
 
-export const READ_RELAYS: readonly string[] = PRODUCTION ? PUBLIC : LOCAL
+/**
+ * curare.to's one addition to bitcoin.mov's file: an explicit list wins over
+ * the NODE_ENV switch, so a production build can be pointed at a local relay
+ * — the end-to-end run builds the real export against the fake relay this
+ * way. Comma-separated; inlined at build time like every NEXT_PUBLIC_ value.
+ */
+const OVERRIDE = (process.env.NEXT_PUBLIC_DIRECTORY_RELAYS ?? '')
+  .split(',')
+  .map((r) => r.trim())
+  .filter((r) => r.length > 0)
 
-export const WRITE_RELAYS: readonly string[] = PRODUCTION ? PUBLIC : LOCAL
+const CHOSEN: readonly string[] = OVERRIDE.length > 0 ? OVERRIDE : PRODUCTION ? PUBLIC : LOCAL
+
+export const READ_RELAYS: readonly string[] = CHOSEN
+
+export const WRITE_RELAYS: readonly string[] = CHOSEN

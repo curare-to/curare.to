@@ -18,13 +18,25 @@ changes**. bitcoin.mov and the Curare app are read, run and tested against,
 never edited; what each would gain from this work is listed at the end, under
 *Future work*, as the phases here make it possible.
 
-**Not built.** Phases 0–9, in the order given, one branch each, all of them
-in this repository. Every phase is deployable on its own and none reaches
+**Being built.** Phases 0–9, in the order given, one commit each, all of them
+in this repository; the table below records where a phase, once built, chose
+differently from what the plan said. Phases 0–1 are built. Every phase is deployable on its own and none reaches
 forward, except where the text says a later phase is what makes an earlier one
 honest. Phases 0–2 are the request as
 stated — a sub is a schema, a post is a canonical entry, and people can read
 and post — and they ship as a strict superset of what bitcoin.mov does today.
 Everything after is what makes it reddit rather than a directory of lists.
+
+## Where the build chose differently
+
+| phase | what the plan said | what it turned out to be |
+|---|---|---|
+| 0 | the vectors include a real suggestion from bitcoin.mov's relay | the relay held 15 canonical entries and neither the schema nor any suggestion — the source each entry names is gone. The real vectors are the served schema and one canonical entry, and the missing suggestion is the plan's case for full copies and a durable relay, observed in production |
+| 0 | `npm run build` | `NODE_ENV=production next build`: a shell that exports `NODE_ENV=development` makes `next build` fail on its own error pages, and the workflow's env line is easy to forget locally |
+| 1 | the domain form requires the schema's `domain` tag to name the host | a `domain` tag that is present must match; one that is absent is fine — bitcoin.mov's own published schema carries none, and the site serving the signed file is what ties the two together. The header shows the route's domain as verified |
+| 1 | the Playwright run against `next dev` on the local relay | against the real static export, served the way GitHub Pages serves it (`e2e/serve.mjs`), built with `NEXT_PUBLIC_DIRECTORY_RELAYS=ws://localhost:10547` — the one addition to bitcoin.mov's `relayList.ts`. In dev, Next reloads a 404-status page after hydration and the run hung; the export is the deployment shape anyway, and the whole suite runs in two seconds |
+| 1 | `/r/npub1…/bitcoin.mov` shows what `/r/bitcoin.mov` shows | not today: the production relay holds no kind 31889, so only the well-known path resolves bitcoin.mov until its schema is republished (future work in that repository). The e2e run covers the coordinate form against the local relay |
+| 1 | "the same 37 entries" | the 15 the relay holds; bitcoin.mov's own page shows the same 15 |
 
 ## The mapping
 
