@@ -109,6 +109,21 @@ export class ListStore {
 
   getSnapshot = (): ListSnapshot => this.snapshot
 
+  /** Resolves once the first read is complete — for a check that must not race the relays. */
+  whenLoaded = (): Promise<ListSnapshot> =>
+    new Promise((resolve) => {
+      if (!this.snapshot.loading) {
+        resolve(this.snapshot)
+        return
+      }
+      const unsubscribe = this.subscribe(() => {
+        if (!this.snapshot.loading) {
+          unsubscribe()
+          resolve(this.snapshot)
+        }
+      })
+    })
+
   getServerSnapshot = (): ListSnapshot => this.serverSnapshot
 
   /** Show a just-published event at once, before the relay echoes it back. */

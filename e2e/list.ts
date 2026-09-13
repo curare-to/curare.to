@@ -25,7 +25,7 @@ export function schemaEvent(): Event {
       ['description', 'Links and notes worth a look, curated by one key for the end-to-end run.'],
       ['visibility', 'public'],
       ['relay', RELAY],
-      ['field', 'identifier', 'token', 'required', '', 'Identifier', '{"tag":"d","max":80}'],
+      ['field', 'identifier', 'token', 'required', '', 'Identifier', '{"tag":"d","max":80,"derived":true}'],
       ['field', 'title', 'text', 'required', '', 'Title', '{"max":200}'],
       ['field', 'link', 'url', 'optional', 'https://…', 'Link', '{"tag":"r","marker":"link","max":500}'],
       ['field', 'body', 'longtext', 'optional', '', 'Text', '{"tag":"content","max":4000}'],
@@ -78,4 +78,23 @@ export function posts(): { suggestions: Event[]; canonicals: Event[] } {
     }
   }
   return { suggestions, canonicals }
+}
+
+/** A closed list by the same curator, for the refusal test: only the curator may suggest. */
+export function closedSchemaEvent(): Event {
+  return signedBy('e2e curator', {
+    kind: 31889,
+    tags: [
+      ['d', 'closed-things'],
+      ['title', 'closed things suggestion'],
+      ['name', 'Closed things'],
+      ['description', 'Only the curator suggests here.'],
+      ['visibility', 'closed'],
+      ['relay', RELAY],
+      ['field', 'identifier', 'token', 'required', '', 'Identifier', '{"tag":"d","max":80}'],
+      ['field', 'title', 'text', 'required', '', 'Title', '{"max":200}'],
+    ],
+    content: 'Only the curator suggests here.',
+    created_at: T0,
+  })
 }

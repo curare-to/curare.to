@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect } from 'react'
-import type { CuratedSchema } from '@/lib/protocol/curated'
+import { canSuggest, type CuratedSchema } from '@/lib/protocol/curated'
 import { useList } from '@/lib/store/listStore'
+import { useSession } from '@/lib/store/session'
 import { profileStore } from '@/lib/store/profileStore'
 import { useResolvedSchema } from '@/lib/store/useResolvedSchema'
 import type { ListRef, ListTab } from '@/lib/routes'
@@ -37,19 +38,29 @@ export function ListPage({ list, tab, entry }: { list: ListRef; tab: ListTab; en
 
 function ResolvedList({ schema, list, tab, entry }: { schema: CuratedSchema; list: ListRef; tab: ListTab; entry?: string }) {
   const domainVerified = list.by === 'domain'
+  const session = useSession()
   useEffect(() => {
     document.title = `${listDisplayName(schema, list)} · curare.to`
     profileStore.addRelays(schema.relays)
   }, [schema, list])
 
-  if (schema.visibility === 'private') {
+  // A private list is shown only to the curator and the pubkeys it names —
+  // the set canSuggest describes. Relays are open; this is the convention
+  // the NIP asks clients to honour, and this site does.
+  if (schema.visibility === 'private' && !canSuggest(schema, session.pubkey)) {
     return (
       <>
         <ListHeader schema={schema} list={list} tab={null} domainVerified={domainVerified} />
         <Notice
           title="This list is private"
           body="Its curator asked clients to show it only to the pubkeys it names. Relays are open, so this is a convention, not encryption — and one this site honours."
-          hint="Sign in with a listed key to read it (coming in Phase 2)."
+          hint={
+            session.status === 'checking'
+              ? 'Checking who you are…'
+              : session.pubkey
+                ? 'Your key is not one it names.'
+                : 'Sign in with a listed key to read it.'
+          }
         />
       </>
     )

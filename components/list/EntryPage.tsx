@@ -12,6 +12,8 @@ import { ProfileName } from '@/components/ui/ProfileName'
 import { TimeAgo } from '@/components/ui/TimeAgo'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { FlairChips, StateBadge } from './EntryCard'
+import { suggestHref } from './ListHeader'
+import { useSession } from '@/lib/store/session'
 
 /** One post: the group's head in full, the other versions folded beneath. */
 export function EntryPage({
@@ -25,6 +27,7 @@ export function EntryPage({
   list: ListRef
   entry: string
 }) {
+  const session = useSession()
   const group = snapshot.groups.find((g) => g.identifier === entry)
   if (!group) {
     return (
@@ -35,6 +38,7 @@ export function EntryPage({
   }
   const view = describeEntry(group.head, schema)
   const others = group.suggestions.filter((s) => s.id !== group.head.id)
+  const mine = session.pubkey ? group.suggestions.find((s) => s.pubkey === session.pubkey) : null
 
   return (
     <article className="space-y-6">
@@ -55,7 +59,17 @@ export function EntryPage({
             {group.state === 'curated' ? 'curated by' : 'suggested by'} <ProfileName pubkey={view.pubkey} />
           </span>
           <TimeAgo seconds={view.createdAt} />
+          {mine ? (
+            <a href={suggestHref(list, schema, group.identifier)} className="text-accent-ink underline">
+              Edit your {group.canonical ? 'suggestion' : 'entry'}
+            </a>
+          ) : null}
         </p>
+        {mine && group.canonical && mine.created_at > group.canonical.created_at ? (
+          <p className="text-xs text-muted">
+            You edited this after the curator curated it; the front page keeps their version until they curate again.
+          </p>
+        ) : null}
       </header>
 
       {view.image ? (

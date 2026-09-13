@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { SignIn } from './SignIn'
 
 export function SiteHeader() {
   return (
@@ -7,7 +8,10 @@ export function SiteHeader() {
         <Link href="/" className="font-semibold tracking-tight text-ink no-underline">
           curare.to
         </Link>
-        <span className="text-sm text-muted">curated lists on Nostr</span>
+        <span className="hidden text-sm text-muted sm:inline">curated lists on Nostr</span>
+        <span className="ml-auto">
+          <SignIn />
+        </span>
       </div>
     </header>
   )

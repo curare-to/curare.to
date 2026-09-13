@@ -30,10 +30,11 @@ const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? ''
 interface RouterState {
   /** Null until mounted — the server render has no location. */
   route: Route | null
-  navigate: (path: string) => void
+  /** Null outside the shell — on a static page a link into /r/… is an ordinary navigation. */
+  navigate: ((path: string) => void) | null
 }
 
-const RouterContext = createContext<RouterState>({ route: null, navigate: () => {} })
+const RouterContext = createContext<RouterState>({ route: null, navigate: null })
 
 export function RouterProvider({ children }: { children: ReactNode }) {
   const [location, setLocation] = useState<{ pathname: string; search: string } | null>(null)
@@ -64,8 +65,10 @@ export function useRoute(): Route | null {
   return useContext(RouterContext).route
 }
 
+/** Navigate within the shell; a full navigation when there is no shell (a static page). */
 export function useNavigate(): (path: string) => void {
-  return useContext(RouterContext).navigate
+  const { navigate } = useContext(RouterContext)
+  return navigate ?? ((path: string) => window.location.assign(withBase(path)))
 }
 
 /** Prefix the base path once, for hrefs built by lib/routes. */
@@ -80,10 +83,11 @@ export function withBase(path: string): string {
  * static pages — is left to the browser.
  */
 export function A({ href, onClick, children, ...rest }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) {
-  const navigate = useNavigate()
+  const { navigate } = useContext(RouterContext)
   const handle = (event: MouseEvent<HTMLAnchorElement>) => {
     onClick?.(event)
     if (event.defaultPrevented) return
+    if (!navigate) return
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
     if (rest.target && rest.target !== '_self') return
     if (!href.startsWith('/')) return

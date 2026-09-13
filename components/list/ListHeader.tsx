@@ -1,8 +1,14 @@
 'use client'
 
 import type { CuratedSchema } from '@/lib/protocol/curated'
-import { A } from '@/lib/router'
+import { A, withBase } from '@/lib/router'
 import { buildPath, type ListRef, type ListTab } from '@/lib/routes'
+
+/** Where the suggest form for a list lives — a static page, reached by a full navigation. */
+export function suggestHref(list: ListRef, schema: CuratedSchema, edit?: string): string {
+  const to = list.by === 'domain' ? list.domain : `31889:${schema.namespace}:${schema.identifier}`
+  return withBase(`/submit/?to=${encodeURIComponent(to)}${edit ? `&edit=${encodeURIComponent(edit)}` : ''}`)
+}
 
 /** The domain when the schema claims one, else its name. */
 export function listDisplayName(schema: CuratedSchema, list?: ListRef): string {
@@ -56,6 +62,12 @@ export function ListHeader({
             <p className="truncate text-sm text-muted">{listDisplayName(schema, list) !== schema.name ? schema.name : schema.title}</p>
           </div>
         </div>
+        <a
+          href={suggestHref(list, schema)}
+          className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-white no-underline hover:bg-accent-ink"
+        >
+          Suggest
+        </a>
         <nav className="flex gap-1" aria-label="List tabs">
           {tabs.map((t) => (
             <A

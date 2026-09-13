@@ -31,6 +31,8 @@ export class FakeRelay {
   private subs = new Set<Sub>()
   /** Every REQ filter received, in order, for tests that assert on queries. */
   readonly requests: Filter[][] = []
+  /** When set, every EVENT is refused with this reason — a relay with a write policy. */
+  refuse: string | null = null
   readonly url: string
 
   private constructor(server: WebSocketServer, port: number) {
@@ -81,6 +83,10 @@ export class FakeRelay {
     const [verb] = message
     if (verb === 'EVENT') {
       const event = message[1] as Event
+      if (this.refuse) {
+        socket.send(JSON.stringify(['OK', event.id, false, `blocked: ${this.refuse}`]))
+        return
+      }
       if (!verifyEvent(event)) {
         socket.send(JSON.stringify(['OK', event.id, false, 'invalid: bad signature']))
         return

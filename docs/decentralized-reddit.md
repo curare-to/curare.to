@@ -20,7 +20,7 @@ never edited; what each would gain from this work is listed at the end, under
 
 **Being built.** Phases 0–9, in the order given, one commit each, all of them
 in this repository; the table below records where a phase, once built, chose
-differently from what the plan said. Phases 0–1 are built. Every phase is deployable on its own and none reaches
+differently from what the plan said. Phases 0–2 are built. Every phase is deployable on its own and none reaches
 forward, except where the text says a later phase is what makes an earlier one
 honest. Phases 0–2 are the request as
 stated — a sub is a schema, a post is a canonical entry, and people can read
@@ -37,6 +37,10 @@ Everything after is what makes it reddit rather than a directory of lists.
 | 1 | the Playwright run against `next dev` on the local relay | against the real static export, served the way GitHub Pages serves it (`e2e/serve.mjs`), built with `NEXT_PUBLIC_DIRECTORY_RELAYS=ws://localhost:10547` — the one addition to bitcoin.mov's `relayList.ts`. In dev, Next reloads a 404-status page after hydration and the run hung; the export is the deployment shape anyway, and the whole suite runs in two seconds |
 | 1 | `/r/npub1…/bitcoin.mov` shows what `/r/bitcoin.mov` shows | not today: the production relay holds no kind 31889, so only the well-known path resolves bitcoin.mov until its schema is republished (future work in that repository). The e2e run covers the coordinate form against the local relay |
 | 1 | "the same 37 entries" | the 15 the relay holds; bitcoin.mov's own page shows the same 15 |
+| 2 | "the one derived field the site fills is `d`" | when the schema marks its d field `derived`. A schema that does not — the directory's "list coordinate" shape — wants the person to supply it, so the form prompts for it and its value is the identifier, checked by the field's own rules |
+| 2 | `fieldProps` marks the first field of a `require-any` group required | it does, for bitcoin.mov's inline error; the form here labels every field of the group "one of Link, Text" instead, and the error still lands on the first |
+| 2 | the duplicate check looks the derived `d` up in the store | after `whenLoaded()`: a form opened by a full navigation submits before the relays have answered, and an empty store is not "no duplicate" |
+| 2 | "done when … `npm run curate` there can curate it" | proven offline: `test/interop.test.ts` (opt-in, `INTEROP=1`) publishes a suggestion built here to the fake relay seeded with bitcoin.mov's real schema and runs that repository's `curate` script in unsigned mode against it — it emits a canonical template this site verifies. No key, no network, nothing changed there |
 
 ## The mapping
 
