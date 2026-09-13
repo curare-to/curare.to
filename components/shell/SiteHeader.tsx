@@ -11,9 +11,14 @@ export function SiteHeader() {
         <span className="hidden text-sm text-muted sm:inline">{process.env.NEXT_PUBLIC_SINGLE_LIST ? 'a curated list on Nostr' : 'curated lists on Nostr'}</span>
         <nav className="ml-auto flex items-center gap-4 text-sm">
           {process.env.NEXT_PUBLIC_SINGLE_LIST ? null : (
-            <Link href="/new/" className="text-ink-2 no-underline hover:text-ink">
-              New list
-            </Link>
+            <>
+              <Link href="/all/" className="text-ink-2 no-underline hover:text-ink">
+                All lists
+              </Link>
+              <Link href="/new/" className="text-ink-2 no-underline hover:text-ink">
+                New list
+              </Link>
+            </>
           )}
           <SignIn />
         </nav>

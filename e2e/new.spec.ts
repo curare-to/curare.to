@@ -56,4 +56,8 @@ test('a list made on /new/ accepts a post from a second browser', async ({ page,
   await expect(page.locator('article', { hasText: 'First post on a new list' })).toBeVisible()
   // The link rule: a link post's identifier is the link's hash.
   await expect(page.locator('article').first().getByRole('link', { name: 'First post on a new list' })).toHaveAttribute('href', /\/url%3A[0-9a-f]{16}\/$/)
+
+  // And the list is in the directory, without anyone's say-so.
+  await page.goto('/all/')
+  await expect(page.getByRole('link', { name: 'Founded on the page' })).toBeVisible()
 })

@@ -4,6 +4,7 @@ import type { CuratedSchema } from '@/lib/protocol/curated'
 import { A, withBase } from '@/lib/router'
 import { buildPath, type ListRef, type ListTab } from '@/lib/routes'
 import { useSession } from '@/lib/store/session'
+import { SubscribeButton } from '@/components/shell/SubscribeButton'
 
 /** Where the suggest form for a list lives — a static page, reached by a full navigation. */
 export function suggestHref(list: ListRef, schema: CuratedSchema, edit?: string): string {
@@ -67,6 +68,7 @@ export function ListHeader({
             <p className="truncate text-sm text-muted">{listDisplayName(schema, list) !== schema.name ? schema.name : schema.title}</p>
           </div>
         </div>
+        <SubscribeButton schema={schema} />
         <a
           href={suggestHref(list, schema)}
           className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-white no-underline hover:bg-accent-ink"
