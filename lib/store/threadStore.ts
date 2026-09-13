@@ -143,6 +143,11 @@ export class ThreadStore {
   }
 }
 
+/** The thread reordered — "best" by the Wilson bound of each comment's votes — without refetching. */
+export function orderThread(comments: Comment[], order: (a: CommentNode, b: CommentNode) => number): CommentNode[] {
+  return buildThread(comments, order)
+}
+
 const threads = new Map<string, ThreadStore>()
 
 export function getThreadStore(schema: CuratedSchema, group: PostGroup, relays: string[]): ThreadStore {

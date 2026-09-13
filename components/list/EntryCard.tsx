@@ -8,6 +8,18 @@ import { buildPath, type ListRef } from '@/lib/routes'
 import { ProfileName } from '@/components/ui/ProfileName'
 import { TimeAgo } from '@/components/ui/TimeAgo'
 import { SafeImage } from '@/components/ui/SafeImage'
+import { VoteButtons } from '@/components/vote/VoteButtons'
+import type { Tally } from '@/lib/protocol/reactions'
+import type { Weighting } from '@/lib/store/useWeighting'
+import type { Event } from 'nostr-tools/pure'
+
+export interface VoteProps {
+  tally: Tally
+  weighting: Weighting
+  relays: string[]
+  writeRelays: string[]
+  onVoted: (event: Event) => void
+}
 
 export function StateBadge({ group }: { group: PostGroup }) {
   return group.state === 'curated' ? (
@@ -41,6 +53,7 @@ export function EntryCard({
   layout,
   showState,
   comments,
+  vote,
 }: {
   group: PostGroup
   schema: CuratedSchema
@@ -48,10 +61,12 @@ export function EntryCard({
   layout: 'card' | 'row'
   showState: boolean
   comments?: number
+  vote?: VoteProps
 }) {
   const view = describeEntry(group.head, schema)
   const href = buildPath({ kind: 'entry', list, entry: group.identifier })
   const versions = group.suggestions.length
+  const votes = vote ? <VoteButtons target={group.head} {...vote} compact={layout === 'card'} /> : null
 
   const meta = (
     <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
@@ -75,6 +90,7 @@ export function EntryCard({
           <SafeImage src={view.image} className="h-full w-full object-cover" placeholderClassName="h-full w-full" />
         </A>
         <div className="flex flex-1 flex-col gap-2 p-3">
+          {votes}
           <h3 className="font-medium leading-snug">
             <A href={href} className="text-ink no-underline hover:underline">
               {view.title}
@@ -93,6 +109,7 @@ export function EntryCard({
 
   return (
     <article className="flex gap-3 rounded-lg border border-line bg-surface p-3">
+      {votes ? <div className="shrink-0 pt-0.5">{votes}</div> : null}
       {view.image ? (
         <A href={href} className="block h-16 w-16 shrink-0 overflow-hidden rounded bg-surface-2">
           <SafeImage src={view.image} className="h-full w-full object-cover" placeholderClassName="h-full w-full" />

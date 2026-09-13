@@ -15,6 +15,10 @@ import { FlairChips, StateBadge } from './EntryCard'
 import { suggestHref } from './ListHeader'
 import { useSession } from '@/lib/store/session'
 import { Thread } from '@/components/thread/Thread'
+import { VoteButtons } from '@/components/vote/VoteButtons'
+import { getReactionStore, useReactions } from '@/lib/store/reactionStore'
+import { useWeighting } from '@/lib/store/useWeighting'
+import { useMemo } from 'react'
 
 /** One post: the group's head in full, the other versions folded beneath. */
 export function EntryPage({
@@ -30,6 +34,12 @@ export function EntryPage({
 }) {
   const session = useSession()
   const group = snapshot.groups.find((g) => g.identifier === entry)
+  const weighting = useWeighting(schema)
+  const targets = useMemo(
+    () => ({ coordinates: group?.coordinates ?? [], ids: group?.ids ?? [] }),
+    [group],
+  )
+  const tallyFor = useReactions(schema, snapshot.relays, targets, weighting)
   if (!group) {
     return (
       <div className="py-12 text-center text-muted">
@@ -49,7 +59,18 @@ export function EntryPage({
         </A>
       </div>
 
-      <header className="space-y-2">
+      <header className="flex gap-4">
+        <div className="shrink-0 pt-1">
+          <VoteButtons
+            target={group.head}
+            tally={tallyFor([...group.coordinates, ...group.ids])}
+            weighting={weighting}
+            relays={snapshot.relays}
+            writeRelays={session.writeRelays}
+            onVoted={getReactionStore(schema, snapshot.relays).pushEvent}
+          />
+        </div>
+        <div className="min-w-0 space-y-2">
         <div className="flex flex-wrap items-center gap-2">
           <StateBadge group={group} />
           <FlairChips flairs={view.flairs} />
@@ -71,6 +92,7 @@ export function EntryPage({
             You edited this after the curator curated it; the front page keeps their version until they curate again.
           </p>
         ) : null}
+        </div>
       </header>
 
       {view.image ? (

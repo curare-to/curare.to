@@ -20,7 +20,7 @@ never edited; what each would gain from this work is listed at the end, under
 
 **Being built.** Phases 0–9, in the order given, one commit each, all of them
 in this repository; the table below records where a phase, once built, chose
-differently from what the plan said. Phases 0–3 are built. Every phase is deployable on its own and none reaches
+differently from what the plan said. Phases 0–4 are built. Every phase is deployable on its own and none reaches
 forward, except where the text says a later phase is what makes an earlier one
 honest. Phases 0–2 are the request as
 stated — a sub is a schema, a post is a canonical entry, and people can read
@@ -42,6 +42,9 @@ Everything after is what makes it reddit rather than a directory of lists.
 | 2 | the duplicate check looks the derived `d` up in the store | after `whenLoaded()`: a form opened by a full navigation submits before the relays have answered, and an empty store is not "no duplicate" |
 | 3 | "`nostr:naddr…` become links to `/r/`" | `nostr:npub…` links to `/u/`; naddr is left as text until there is a page to link it to — the list page takes an npub and a `d`, and an naddr carries both, so it is a small later addition |
 | 3 | "done when … after `npm run curate` curates it" | the e2e run curates from outside the page with the run's own curator key, on a list of its own so the other specs' counts hold; bitcoin.mov's script does the same thing to the same relay, and the interop test covers that it would |
+| 4 | "votes from follows weigh 1, everything else 0.2, and 0 is a click away" | three modes rather than a number: *Everyone* (the raw count), *Trusted* (follows 1, the rest 0.2) and *Only trusted* (the rest 0). The hover on every score says which count it is and what the other would be |
+| 4 | one vote per pubkey, the newest winning | timestamps are seconds, so a change of mind within the same second is stamped a second later; otherwise the tie broke on id and a reversal could lose |
+| 4 | "*best*, for comments, is the Wilson lower bound" | and comments can be voted on: the same reaction store, by comment id, orders the thread |
 | 2 | "done when … `npm run curate` there can curate it" | proven offline: `test/interop.test.ts` (opt-in, `INTEROP=1`) publishes a suggestion built here to the fake relay seeded with bitcoin.mov's real schema and runs that repository's `curate` script in unsigned mode against it — it emits a canonical template this site verifies. No key, no network, nothing changed there |
 
 ## The mapping

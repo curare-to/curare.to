@@ -7,24 +7,37 @@ import { Linkify } from '@/components/ui/Linkify'
 import { ProfileName } from '@/components/ui/ProfileName'
 import { TimeAgo } from '@/components/ui/TimeAgo'
 import { CommentForm } from './CommentForm'
+import { VoteButtons } from '@/components/vote/VoteButtons'
+import type { Tally } from '@/lib/protocol/reactions'
+import type { Weighting } from '@/lib/store/useWeighting'
+
+export interface CommentVoting {
+  tallyFor: (id: string) => Tally
+  weighting: Weighting
+  relays: string[]
+  writeRelays: string[]
+  onVoted: (event: Event) => void
+}
 
 export function CommentTree({
   nodes,
   root,
   relays,
   onPublished,
+  voting,
   depth = 0,
 }: {
   nodes: CommentNode[]
   root: CommentRoot
   relays: string[]
   onPublished: (event: Event) => void
+  voting?: CommentVoting
   depth?: number
 }) {
   return (
     <ol className={depth === 0 ? 'space-y-4' : 'mt-3 space-y-3 border-l border-line pl-4'}>
       {nodes.map((node) => (
-        <CommentItem key={node.comment.id} node={node} root={root} relays={relays} onPublished={onPublished} depth={depth} />
+        <CommentItem key={node.comment.id} node={node} root={root} relays={relays} onPublished={onPublished} voting={voting} depth={depth} />
       ))}
     </ol>
   )
@@ -35,12 +48,14 @@ function CommentItem({
   root,
   relays,
   onPublished,
+  voting,
   depth,
 }: {
   node: CommentNode
   root: CommentRoot
   relays: string[]
   onPublished: (event: Event) => void
+  voting?: CommentVoting
   depth: number
 }) {
   const [replying, setReplying] = useState(false)
@@ -61,7 +76,18 @@ function CommentItem({
           <p className="mt-1 max-w-prose whitespace-pre-wrap text-sm leading-relaxed text-ink">
             <Linkify text={comment.content} />
           </p>
-          <div className="mt-1 text-xs">
+          <div className="mt-1 flex items-center gap-3 text-xs">
+            {voting ? (
+              <VoteButtons
+                target={comment.event}
+                tally={voting.tallyFor(comment.id)}
+                weighting={voting.weighting}
+                relays={voting.relays}
+                writeRelays={voting.writeRelays}
+                onVoted={voting.onVoted}
+                compact
+              />
+            ) : null}
             {replying ? null : (
               <button type="button" onClick={() => setReplying(true)} className="text-muted hover:text-ink">
                 Reply
@@ -84,7 +110,7 @@ function CommentItem({
             </div>
           ) : null}
           {node.replies.length > 0 ? (
-            <CommentTree nodes={node.replies} root={root} relays={relays} onPublished={onPublished} depth={depth + 1} />
+            <CommentTree nodes={node.replies} root={root} relays={relays} onPublished={onPublished} voting={voting} depth={depth + 1} />
           ) : null}
         </>
       ) : (
