@@ -45,7 +45,7 @@ class FollowStore {
     } catch {
       events = []
     }
-    const newest = events.sort((a, b) => b.created_at - a.created_at)[0]
+    const newest = events.sort((a, b) => b.created_at - a.created_at || (a.id < b.id ? -1 : 1))[0]
     this.follows.set(pubkey, newest ? followsOf(newest) : new Set())
     for (const listener of this.listeners.get(pubkey) ?? []) listener()
   }

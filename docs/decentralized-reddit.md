@@ -20,7 +20,7 @@ never edited; what each would gain from this work is listed at the end, under
 
 **Being built.** Phases 0–9, in the order given, one commit each, all of them
 in this repository; the table below records where a phase, once built, chose
-differently from what the plan said. Phases 0–7 are built. Every phase is deployable on its own and none reaches
+differently from what the plan said. Phases 0–8 are built. Every phase is deployable on its own and none reaches
 forward, except where the text says a later phase is what makes an earlier one
 honest. Phases 0–2 are the request as
 stated — a sub is a schema, a post is a canonical entry, and people can read
@@ -54,6 +54,9 @@ Everything after is what makes it reddit rather than a directory of lists.
 | 7 | "a bad signature … never reach[es] the page" | it never reaches the store either: nostr-tools checks signatures on the way in and discards forged events, so the scan's `dropped` counts unusable schemas and only a forged event handed in directly. A short page is therefore not the end of the scan; an empty one is |
 | 7 | "NIP-50 `search` is passed to relays that advertise it" | not yet: the filter over what is loaded is there, and NIP-50 waits for Phase 9's relay work (NIP-11 is what says which relays advertise it) |
 | 7 | the viewer's mute list hides muted curators | the mute list module and store (kind 10000, private items through the extension's NIP-44) arrived here rather than in Phase 8, because the directory needed them first; Phase 8 applies the curator's |
+| 8 | "the header shows a check only when both the NIP-05 `_` lookup and the well-known document name the curator" | so it does, and the check has three answers: *claimed…* while checking, *✓ verified* and *✗ unverified*. A list opened by its domain is verified by that route alone — the site served the signed schema — and skips the check |
+| 8 | editing the mute list | republishes the public part and carries the previous event's encrypted content over verbatim, so a curator with private mutes the extension cannot open loses nothing. Two edits in one second are stamped a second apart: replaceable events resolve by timestamp, and a tie broke on id — the same fix as votes, and the fake relay now keeps replaceable kinds the way NIP-01 says |
+| 8 | the mod log "shown on the sub's *log* tab" | and the *Banned* tab beside it, both visible to everyone (the curator's mute list is public; only the curator can edit it), because a ban that nobody can see is not a ban a reader can reason about |
 | 2 | "done when … `npm run curate` there can curate it" | proven offline: `test/interop.test.ts` (opt-in, `INTEROP=1`) publishes a suggestion built here to the fake relay seeded with bitcoin.mov's real schema and runs that repository's `curate` script in unsigned mode against it — it emits a canonical template this site verifies. No key, no network, nothing changed there |
 
 ## The mapping

@@ -18,7 +18,9 @@ interface Sub {
   filters: Filter[]
 }
 
+/** NIP-01: replaceable kinds (10000–19999, and 0 and 3) keep one per pubkey; addressable ones (30000–39999) one per pubkey and d. */
 const addressableKey = (event: Event): string | null => {
+  if (event.kind === 0 || event.kind === 3 || (event.kind >= 10000 && event.kind < 20000)) return `${event.kind}:${event.pubkey}`
   if (event.kind < 30000 || event.kind >= 40000) return null
   const d = event.tags.find((t) => t[0] === 'd')?.[1] ?? ''
   return `${event.kind}:${event.pubkey}:${d}`
@@ -65,7 +67,8 @@ export class FakeRelay {
     if (key) {
       const currentId = this.byAddress.get(key)
       const current = currentId ? this.events.get(currentId) : undefined
-      if (current && current.created_at > event.created_at) return false
+      // Newer wins; on the same second, NIP-01 keeps the lower id.
+      if (current && (current.created_at > event.created_at || (current.created_at === event.created_at && current.id < event.id))) return false
       if (current) this.events.delete(current.id)
       this.byAddress.set(key, event.id)
     }

@@ -13,6 +13,8 @@ import { useSession } from '@/lib/store/session'
 import { useWeighting } from '@/lib/store/useWeighting'
 import type { ListRef, ListTab } from '@/lib/routes'
 import { useCommentCounts } from '@/lib/store/threadStore'
+import { useListMutes } from '@/lib/store/useListMutes'
+import { isMuted } from '@/lib/protocol/mutes'
 import { EntryCard } from './EntryCard'
 
 /**
@@ -40,12 +42,14 @@ export function PostList({
 
   const [showRejected, setShowRejected] = useState(false)
   const rejectedCount = useMemo(() => snapshot.groups.filter((g) => g.rejected).length, [snapshot.groups])
+  // The curator's mute list bans inside the list — the queue and New — and the viewer's applies everywhere.
+  const { merged, viewer: viewerMutes } = useListMutes(schema)
   const base = useMemo(
     () =>
       tab === 'front'
-        ? snapshot.groups.filter((g) => g.state === 'curated')
-        : snapshot.groups.filter((g) => showRejected || !g.rejected),
-    [snapshot.groups, tab, showRejected],
+        ? snapshot.groups.filter((g) => g.state === 'curated' && !isMuted(viewerMutes, g.head))
+        : snapshot.groups.filter((g) => (showRejected || !g.rejected) && !isMuted(merged, g.head)),
+    [snapshot.groups, tab, showRejected, merged, viewerMutes],
   )
   const page = useMemo(() => base.slice(0, 120), [base])
   const countFor = useCommentCounts(schema, page, snapshot.relays)

@@ -16,6 +16,10 @@ import { ProfileName } from '@/components/ui/ProfileName'
 import { TimeAgo } from '@/components/ui/TimeAgo'
 import { EntryForm } from '@/components/entry/EntryForm'
 import { suggestHref } from '@/components/list/ListHeader'
+import { useListMutes } from '@/lib/store/useListMutes'
+import { isMuted } from '@/lib/protocol/mutes'
+import { useReports } from '@/lib/store/reportStore'
+import type { Report } from '@/lib/protocol/reports'
 
 export const CURARE_APP_URL = 'https://github.com/curare-to/curated-kmp'
 
@@ -32,8 +36,12 @@ export function ModQueue({ schema, snapshot, list }: { schema: CuratedSchema; sn
   const curator = !!session.pubkey && canCurate(schema, session.pubkey)
   const [showRejected, setShowRejected] = useState(false)
 
-  const pending = useMemo(() => snapshot.groups.filter((g) => g.state === 'pending' && !g.rejected), [snapshot.groups])
+  const { curator: curatorMutes } = useListMutes(schema)
+  const pending = useMemo(() => snapshot.groups.filter((g) => g.state === 'pending' && !g.rejected && !isMuted(curatorMutes, g.head)), [snapshot.groups, curatorMutes])
+  const muted = useMemo(() => snapshot.groups.filter((g) => g.state === 'pending' && !g.rejected && isMuted(curatorMutes, g.head)), [snapshot.groups, curatorMutes])
+  const [showMuted, setShowMuted] = useState(false)
   const rejected = useMemo(() => snapshot.groups.filter((g) => g.rejected), [snapshot.groups])
+  const reportsFor = useReports(schema, snapshot.relays, useMemo(() => snapshot.groups.flatMap((g) => g.ids), [snapshot.groups]))
   const updated = useMemo(
     () => snapshot.groups.filter((g) => g.canonical && g.suggestions.some((s) => s.created_at > g.canonical!.created_at)),
     [snapshot.groups],
@@ -66,14 +74,29 @@ export function ModQueue({ schema, snapshot, list }: { schema: CuratedSchema; sn
 
       <Section title={`Pending (${pending.length})`} empty={snapshot.loading ? 'Reading the relays…' : 'Nothing is waiting.'}>
         {pending.map((g) => (
-          <QueueRow key={g.identifier} group={g} schema={schema} snapshot={snapshot} list={list} curator={curator} />
+          <QueueRow key={g.identifier} group={g} schema={schema} snapshot={snapshot} list={list} curator={curator} reports={curator ? reportsFor(g.ids) : []} />
         ))}
       </Section>
+
+      {muted.length > 0 ? (
+        <section>
+          <button type="button" onClick={() => setShowMuted((v) => !v)} className="text-sm text-muted hover:text-ink">
+            {showMuted ? '▾' : '▸'} From banned keys or muted words ({muted.length})
+          </button>
+          {showMuted ? (
+            <div className="mt-3 space-y-3">
+              {muted.map((g) => (
+                <QueueRow key={g.identifier} group={g} schema={schema} snapshot={snapshot} list={list} curator={curator} reports={curator ? reportsFor(g.ids) : []} />
+              ))}
+            </div>
+          ) : null}
+        </section>
+      ) : null}
 
       {updated.length > 0 ? (
         <Section title={`Updated since curated (${updated.length})`} empty="">
           {updated.map((g) => (
-            <QueueRow key={g.identifier} group={g} schema={schema} snapshot={snapshot} list={list} curator={curator} recuration />
+            <QueueRow key={g.identifier} group={g} schema={schema} snapshot={snapshot} list={list} curator={curator} recuration reports={curator ? reportsFor(g.ids) : []} />
           ))}
         </Section>
       ) : null}
@@ -86,7 +109,7 @@ export function ModQueue({ schema, snapshot, list }: { schema: CuratedSchema; sn
           {showRejected ? (
             <div className="mt-3 space-y-3">
               {rejected.map((g) => (
-                <QueueRow key={g.identifier} group={g} schema={schema} snapshot={snapshot} list={list} curator={curator} />
+                <QueueRow key={g.identifier} group={g} schema={schema} snapshot={snapshot} list={list} curator={curator} reports={curator ? reportsFor(g.ids) : []} />
               ))}
             </div>
           ) : null}
@@ -112,6 +135,7 @@ function QueueRow({
   list,
   curator,
   recuration,
+  reports = [],
 }: {
   group: PostGroup
   schema: CuratedSchema
@@ -119,6 +143,7 @@ function QueueRow({
   list: ListRef
   curator: boolean
   recuration?: boolean
+  reports?: Report[]
 }) {
   const session = useSession()
   const [busy, setBusy] = useState<string | null>(null)
@@ -195,6 +220,22 @@ function QueueRow({
         <p className="mt-2 text-xs text-note">
           Rejected {group.rejections[0].reason ? `— “${group.rejections[0].reason}”` : ''}
         </p>
+      ) : null}
+
+      {reports.length > 0 ? (
+        <div className="mt-2 rounded-md border border-danger bg-danger-soft px-3 py-2 text-xs text-ink">
+          <p className="font-medium">
+            {reports.length} report{reports.length === 1 ? '' : 's'}
+          </p>
+          <ul className="mt-1 space-y-0.5">
+            {reports.slice(0, 5).map((r) => (
+              <li key={r.id}>
+                <span className="font-medium">{r.type}</span>
+                {r.reason ? ` — ${r.reason}` : ''} <span className="text-muted">by <ProfileName pubkey={r.pubkey} className="text-xs" /></span>
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : null}
 
       {changes.length > 0 ? (

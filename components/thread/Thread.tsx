@@ -10,6 +10,8 @@ import { getReactionStore, useReactions } from '@/lib/store/reactionStore'
 import { useSession } from '@/lib/store/session'
 import { getThreadStore, orderThread, useThread } from '@/lib/store/threadStore'
 import { useWeighting } from '@/lib/store/useWeighting'
+import { useListMutes } from '@/lib/store/useListMutes'
+import { getReportStore } from '@/lib/store/reportStore'
 import { CommentForm } from './CommentForm'
 import { CommentTree, type CommentVoting } from './CommentTree'
 
@@ -48,12 +50,15 @@ export function Thread({ schema, group, relays }: { schema: CuratedSchema; group
     return orderThread(thread.comments, (a, b) => best(b) - best(a) || b.comment.createdAt - a.comment.createdAt || (a.comment.id < b.comment.id ? 1 : -1))
   }, [thread.comments, tallyFor])
 
+  const { merged } = useListMutes(schema)
   const voting: CommentVoting = {
     tallyFor: (id) => tallyFor([id]),
     weighting,
     relays,
     writeRelays: session.writeRelays,
     onVoted: getReactionStore(schema, relays).pushEvent,
+    isMuted: (pubkey) => merged.pubkeys.has(pubkey),
+    onReported: getReportStore(schema, relays).pushEvent,
   }
 
   return (

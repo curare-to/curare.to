@@ -123,7 +123,7 @@ class SessionStore {
     } catch {
       events = []
     }
-    const newest = events.sort((a, b) => b.created_at - a.created_at)[0]
+    const newest = events.sort((a, b) => b.created_at - a.created_at || (a.id < b.id ? -1 : 1))[0]
     if (!newest) return
     const current = this.session
     if (current.status === 'signed-in' && current.pubkey === pubkey) {

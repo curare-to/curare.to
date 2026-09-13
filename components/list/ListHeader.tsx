@@ -5,6 +5,7 @@ import { A, withBase } from '@/lib/router'
 import { buildPath, type ListRef, type ListTab } from '@/lib/routes'
 import { useSession } from '@/lib/store/session'
 import { SubscribeButton } from '@/components/shell/SubscribeButton'
+import { useDomainVerification } from '@/lib/resolve/domain'
 
 /** Where the suggest form for a list lives — a static page, reached by a full navigation. */
 export function suggestHref(list: ListRef, schema: CuratedSchema, edit?: string): string {
@@ -31,11 +32,14 @@ export function ListHeader({
   domainVerified: boolean
 }) {
   const session = useSession()
+  const verification = useDomainVerification(schema, domainVerified)
   const tabs: { key: ListTab; label: string }[] = [
     { key: 'front', label: 'Front page' },
     { key: 'new', label: 'New' },
     // The queue is where curating happens; anyone signed in may look, only the curator may act.
     ...(session.pubkey ? [{ key: 'queue' as const, label: session.pubkey === schema.namespace ? 'Queue ✎' : 'Queue' }] : []),
+    { key: 'banned' as const, label: 'Banned' },
+    { key: 'log' as const, label: 'Log' },
   ]
   return (
     <header className="border-b border-line bg-surface">
@@ -54,13 +58,16 @@ export function ListHeader({
               <A href={buildPath({ kind: 'list', list, tab: 'front' })} className="text-ink no-underline">
                 {listDisplayName(schema, list)}
               </A>
-              {schema.domain && !domainVerified ? (
-                <span className="ml-2 align-middle text-xs font-normal text-muted" title="This schema names a domain; it has not been checked against that site.">
-                  claimed
+              {verification === 'checking' ? (
+                <span className="ml-2 align-middle text-xs font-normal text-muted" title="Checking the domain's NIP-05 and well-known document.">
+                  claimed…
                 </span>
-              ) : null}
-              {domainVerified ? (
-                <span className="ml-2 align-middle text-xs font-normal text-accent" title={`${listDisplayName(schema, list)} serves this signed schema.`}>
+              ) : verification === 'unverified' ? (
+                <span className="ml-2 align-middle text-xs font-normal text-note" title="The domain does not name this curator at /.well-known/nostr.json, or does not serve this schema at /.well-known/curare.to/nostr.json.">
+                  ✗ unverified
+                </span>
+              ) : verification === 'verified' ? (
+                <span className="ml-2 align-middle text-xs font-normal text-accent" title={`${listDisplayName(schema, list)} names this curator and serves this signed schema.`}>
                   ✓ verified
                 </span>
               ) : null}

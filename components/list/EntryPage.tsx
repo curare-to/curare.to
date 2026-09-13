@@ -19,6 +19,8 @@ import { VoteButtons } from '@/components/vote/VoteButtons'
 import { getReactionStore, useReactions } from '@/lib/store/reactionStore'
 import { useWeighting } from '@/lib/store/useWeighting'
 import { useMemo } from 'react'
+import { ReportButton } from '@/components/mod/ReportButton'
+import { getReportStore } from '@/lib/store/reportStore'
 
 /** One post: the group's head in full, the other versions folded beneath. */
 export function EntryPage({
@@ -86,6 +88,7 @@ export function EntryPage({
               Edit your {group.canonical ? 'suggestion' : 'entry'}
             </a>
           ) : null}
+          <ReportButton target={group.head} relays={snapshot.relays} onReported={getReportStore(schema, snapshot.relays).pushEvent} />
         </p>
         {group.rejections.length > 0 && !group.canonical ? (
           <p className="rounded-md border border-note bg-note-soft px-3 py-2 text-sm text-ink">

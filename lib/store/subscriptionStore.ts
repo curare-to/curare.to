@@ -26,6 +26,7 @@ class SubscriptionStore {
   private snapshot: SubscriptionsSnapshot = EMPTY
   private listeners = new Set<() => void>()
   private loadedFor: string | null = null
+  private lastPublishedAt = 0
 
   subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener)
@@ -77,7 +78,7 @@ class SubscriptionStore {
     } catch {
       events = []
     }
-    const latest = events.sort((a, b) => b.created_at - a.created_at)[0]
+    const latest = events.sort((a, b) => b.created_at - a.created_at || (a.id < b.id ? -1 : 1))[0]
     if (this.loadedFor !== pubkey) return
     if (!latest) {
       this.set({ status: 'ready', subscriptions: [], privateUnreadable: false })
@@ -94,7 +95,9 @@ class SubscriptionStore {
     if (this.snapshot.privateUnreadable) {
       throw new Error('Your list has private items this extension cannot open; republishing would lose them.')
     }
-    const template = await buildSubscriptionsTemplate(next, this.crypto(pubkey).encrypt)
+    const createdAt = Math.max(Math.floor(Date.now() / 1000), this.lastPublishedAt + 1)
+    const template = await buildSubscriptionsTemplate(next, this.crypto(pubkey).encrypt, createdAt)
+    this.lastPublishedAt = createdAt
     const { signed } = await signAndPublish(template, this.relays())
     const parsed = await parseSubscriptions(signed, this.crypto(pubkey).decrypt)
     this.set({ status: 'ready', ...parsed })

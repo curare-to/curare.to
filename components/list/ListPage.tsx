@@ -13,6 +13,8 @@ import { ListSidebar } from './ListSidebar'
 import { PostList } from './PostList'
 import { EntryPage } from './EntryPage'
 import { ModQueue } from '@/components/mod/ModQueue'
+import { BannedTab } from '@/components/mod/BannedTab'
+import { LogTab } from '@/components/mod/LogTab'
 
 /**
  * /r/<…>/ and /r/<…>/<entry>/: resolve the address to a verified schema,
@@ -97,6 +99,10 @@ function LiveList({
             <EntryPage schema={schema} snapshot={snapshot} list={list} entry={entry} />
           ) : tab === 'queue' ? (
             <ModQueue schema={schema} snapshot={snapshot} list={list} />
+          ) : tab === 'banned' ? (
+            <BannedTab schema={schema} relays={snapshot.relays} />
+          ) : tab === 'log' ? (
+            <LogTab schema={schema} snapshot={snapshot} list={list} />
           ) : (
             <PostList schema={schema} snapshot={snapshot} list={list} tab={tab} />
           )}

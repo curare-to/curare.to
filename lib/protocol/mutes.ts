@@ -1,4 +1,4 @@
-import type { Event } from 'nostr-tools/pure'
+import type { Event, EventTemplate } from 'nostr-tools/pure'
 import type { Decrypt } from './subscriptions'
 
 /* NIP-51 kind 10000 — the mute list. The curator's applies inside their
@@ -46,4 +46,43 @@ export function hitsMutedWord(text: string, words: string[]): boolean {
   if (words.length === 0) return false
   const lower = text.toLowerCase()
   return words.some((w) => new RegExp(`(^|[^\\p{L}\\p{N}])${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}($|[^\\p{L}\\p{N}])`, 'u').test(lower))
+}
+
+/**
+ * A mute list to publish: public pubkeys and words as tags, and — since the
+ * list is replaceable and private items may be unreadable here — the
+ * previous event's encrypted content carried over verbatim, so editing the
+ * public part never drops the private part.
+ */
+export function buildMutesTemplate(options: {
+  pubkeys: Iterable<string>
+  words: Iterable<string>
+  previous?: Pick<Event, 'content'> | null
+  createdAt?: number
+}): EventTemplate {
+  return {
+    kind: MUTE_KIND,
+    tags: [
+      ...[...new Set(options.pubkeys)].map((pk) => ['p', pk]),
+      ...[...new Set([...options.words].map((w) => w.trim().toLowerCase()).filter(Boolean))].map((w) => ['word', w]),
+    ],
+    content: options.previous?.content ?? '',
+    created_at: options.createdAt ?? Math.floor(Date.now() / 1000),
+  }
+}
+
+/** Is an event's author muted, or its title a muted word? */
+export function isMuted(mutes: Mutes, event: { pubkey: string; tags: string[][] }): boolean {
+  if (mutes.pubkeys.has(event.pubkey)) return true
+  const title = event.tags.find((t) => t[0] === 'title')?.[1] ?? ''
+  return hitsMutedWord(title, mutes.words)
+}
+
+/** Two lists as one — the curator's inside their list, the viewer's everywhere. */
+export function mergeMutes(...lists: Mutes[]): Mutes {
+  return {
+    pubkeys: new Set(lists.flatMap((m) => [...m.pubkeys])),
+    words: [...new Set(lists.flatMap((m) => m.words))],
+    privateUnreadable: lists.some((m) => m.privateUnreadable),
+  }
 }

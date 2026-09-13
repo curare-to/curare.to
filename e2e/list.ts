@@ -195,3 +195,46 @@ export function modPosts(): Event[] {
   const fourEdited = post('e2e alice', 4, 'Mod thing four, corrected', T0 + 500)
   return [one, two, three, fourCanonical, fourEdited]
 }
+
+/** A list for the moderation run: a post by bob to report and ban, one by carol whose title a muted word hits, and a curated one for the log. */
+export const BAN_LIST = 'ban-things'
+export const BAN_ADDRESS = `31889:${CURATOR}:${BAN_LIST}`
+
+export function banSchemaEvent(): Event {
+  return signedBy('e2e curator', {
+    kind: 31889,
+    tags: [
+      ['d', BAN_LIST],
+      ['title', 'ban things suggestion'],
+      ['name', 'Banned things'],
+      ['description', 'Where the moderation run happens.'],
+      ['visibility', 'public'],
+      ['relay', RELAY],
+      ['field', 'identifier', 'token', 'required', '', 'Identifier', '{"tag":"d","max":80,"derived":true}'],
+      ['field', 'title', 'text', 'required', '', 'Title', '{"max":200}'],
+      ['field', 'link', 'url', 'optional', 'https://…', 'Link', '{"tag":"r","marker":"link","max":500}'],
+    ],
+    content: 'Where the moderation run happens.',
+    created_at: T0,
+  })
+}
+
+export function banPosts(): Event[] {
+  const post = (author: string, d: string, title: string, created_at: number) =>
+    signedBy(author, {
+      kind: 31888,
+      tags: [['d', d], ['title', title], ['r', `https://example.org/${d}`, 'link'], ['a', BAN_ADDRESS, RELAY, 'root'], ['p', CURATOR], ['k', '31889']],
+      content: '',
+      created_at,
+    })
+  const pills = post('e2e bob', 'pills', 'Cheap pills here', T0 + 100)
+  const lottery = post('e2e carol', 'lottery', 'Win the lottery tonight', T0 + 200)
+  const fine = post('e2e alice', 'fine', 'A fine thing', T0 + 300)
+  const curated = signedBy('e2e curator', {
+    kind: 31890,
+    tags: [...fine.tags.filter((t) => t[0] !== 'p' || t[1] === CURATOR), ['a', `31888:${fine.pubkey}:fine`, RELAY, 'mention'], ['e', fine.id, RELAY, 'mention'], ['p', fine.pubkey]],
+    content: '',
+    created_at: T0 + 350,
+  })
+  return [pills, lottery, fine, curated]
+}

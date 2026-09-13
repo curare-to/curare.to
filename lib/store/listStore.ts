@@ -50,6 +50,18 @@ export interface ListSnapshot {
   relays: string[]
   /** The curator's standing rejections, by suggestion coordinate. */
   rejections: Rejection[]
+  /** Every curator action seen, newest first: the audit trail the protocol already produces. */
+  log: LogEntry[]
+}
+
+export interface LogEntry {
+  id: string
+  createdAt: number
+  kind: 'curated' | 'rejected' | 'withdrew'
+  /** The entry's `d` for a curation; the suggester's coordinate for a rejection; the label ids for a withdrawal. */
+  subject: string
+  detail: string
+  pubkey: string
 }
 
 export interface ListStoreOptions {
@@ -74,6 +86,7 @@ export class ListStore {
   private canonicals = new Map<string, Event>()
   private rejections = new Map<string, Rejection>()
   private deleted = new Set<string>()
+  private log = new Map<string, LogEntry>()
   private dropped = 0
   private loading = true
   private listeners = new Set<() => void>()
@@ -148,31 +161,39 @@ export class ListStore {
     }
     if (event.kind === CURATED_CANONICAL_KIND) {
       if (!verifyCuratedCanonical(event, this.schema).ok) return this.drop()
-      return this.keep(this.canonicals, d, event)
+      const title = event.tags.find((t) => t[0] === 'title')?.[1] ?? d
+      this.record({ id: event.id, createdAt: event.created_at, kind: 'curated', subject: d, detail: title, pubkey: event.pubkey })
+      // An older version still went in the log; only the newest is the entry.
+      return this.keep(this.canonicals, d, event) || true
     }
     return this.drop()
+  }
+
+  private record(entry: LogEntry): void {
+    if (!this.log.has(entry.id)) this.log.set(entry.id, entry)
   }
 
   /** The curator's labels and deletions: a rejection stands until curated after all, or deleted. */
   private note(event: Event): boolean {
     if (event.pubkey !== this.schema.namespace) return false
     if (event.kind === DELETION_KIND) {
-      let changed = false
-      for (const id of deletedIds(event)) {
+      const ids = deletedIds(event)
+      if (ids.length === 0) return false
+      this.record({ id: event.id, createdAt: event.created_at, kind: 'withdrew', subject: ids.join(','), detail: event.content.trim(), pubkey: event.pubkey })
+      for (const id of ids) {
         this.deleted.add(id)
         for (const [coordinate, rejection] of this.rejections) {
-          if (rejection.id === id) {
-            this.rejections.delete(coordinate)
-            changed = true
-          }
+          if (rejection.id === id) this.rejections.delete(coordinate)
         }
       }
-      return changed
+      return true
     }
     const rejection = parseRejection(event, this.schema.namespace)
-    if (!rejection || this.deleted.has(rejection.id)) return false
+    if (!rejection) return false
+    this.record({ id: event.id, createdAt: event.created_at, kind: 'rejected', subject: rejection.coordinate, detail: rejection.reason, pubkey: event.pubkey })
+    if (this.deleted.has(rejection.id)) return true
     const existing = this.rejections.get(rejection.coordinate)
-    if (existing && existing.createdAt >= rejection.createdAt) return false
+    if (existing && existing.createdAt >= rejection.createdAt) return true
     this.rejections.set(rejection.coordinate, rejection)
     return true
   }
@@ -273,6 +294,7 @@ export class ListStore {
     const suggestions = [...this.suggestions.values()].sort(byNewest)
     const canonicals = [...this.canonicals.values()].sort(byNewest)
     const rejections = [...this.rejections.values()]
+    const log = [...this.log.values()].sort((a, b) => b.createdAt - a.createdAt || (a.id < b.id ? 1 : -1))
     return {
       schema: this.schema,
       loading: this.loading,
@@ -282,6 +304,7 @@ export class ListStore {
       dropped: this.dropped,
       relays: this.relays,
       rejections,
+      log,
     }
   }
 }

@@ -67,7 +67,7 @@ class MuteStore {
     } catch {
       events = []
     }
-    const latest = events.sort((a, b) => b.created_at - a.created_at)[0]
+    const latest = events.sort((a, b) => b.created_at - a.created_at || (a.id < b.id ? -1 : 1))[0]
     this.mutes.set(pubkey, latest ? await parseMutes(latest, this.decryptFor(pubkey)) : { ...NO_MUTES })
     for (const listener of this.listeners.get(pubkey) ?? []) listener()
   }
