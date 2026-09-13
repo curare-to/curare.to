@@ -44,7 +44,9 @@ the write policy (exactly the kinds the site speaks), the negentropy sync
 that pulls those kinds from every relay the lists name, a docker-compose
 file and a systemd timer. It is a cache, not an authority — the directory
 relays are a setting on the *All lists* page, and any list may add it to its
-`relay` tags. See [relay/README.md](relay/README.md).
+`relay` tags. It is not in the built-in relay list until it is standing; add
+it to `PUBLIC` in `lib/nostr/relayList.ts` then. See
+[relay/README.md](relay/README.md).
 
 ## Your own site
 
