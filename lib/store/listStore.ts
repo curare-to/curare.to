@@ -5,7 +5,7 @@ import type { Event } from 'nostr-tools/pure'
 import type { Filter } from 'nostr-tools/filter'
 import type { SimplePool } from 'nostr-tools/pool'
 import { pool as defaultPool } from '@/lib/nostr/pool'
-import { READ_RELAYS } from '@/lib/nostr/relays'
+import { directoryRelays } from '@/lib/nostr/relays'
 import {
   CURATED_CANONICAL_KIND,
   CURATED_SUGGESTION_KIND,
@@ -16,6 +16,7 @@ import {
 } from '@/lib/protocol/curated'
 import { identifierOf, postGroups, type PostGroup, type Rejection } from '@/lib/protocol/group'
 import { DELETION_KIND, deletedIds, LABEL_KIND, LABEL_NAMESPACE, parseRejection } from '@/lib/protocol/labels'
+import { eventCache, SINCE_OVERLAP_SECONDS, type EventCache } from '@/lib/cache/eventCache'
 
 /* ------------------------------------------------------------------ *
  * One sub's events, live.
@@ -71,6 +72,8 @@ export interface ListStoreOptions {
   loadingTimeoutMs?: number
   /** How long a store with no subscribers keeps its relay subscriptions open. */
   idleCloseMs?: number
+  /** The device's event cache; the shared one by default. */
+  cache?: EventCache
 }
 
 const byNewest = (a: Event, b: Event) => b.created_at - a.created_at || (a.id < b.id ? 1 : -1)
@@ -81,6 +84,10 @@ export class ListStore {
   private readonly pool: Pick<SimplePool, 'subscribeMany'>
   private readonly loadingTimeoutMs: number
   private readonly idleCloseMs: number
+  private readonly cache: EventCache
+  private readonly scope: string
+  private toCache: Event[] = []
+  private primed = false
 
   private suggestions = new Map<string, Event>()
   private canonicals = new Map<string, Event>()
@@ -104,7 +111,9 @@ export class ListStore {
     this.pool = options.pool ?? defaultPool
     this.loadingTimeoutMs = options.loadingTimeoutMs ?? 6000
     this.idleCloseMs = options.idleCloseMs ?? 60_000
-    const fallback = options.fallbackRelays ?? READ_RELAYS
+    this.cache = options.cache ?? eventCache()
+    this.scope = `list:${curatedSchemaAddress(schema) ?? schema.identifier}`
+    const fallback = options.fallbackRelays ?? directoryRelays()
     this.relays = schema.relays.length > 0 ? [...schema.relays] : [...fallback]
     this.snapshot = this.build()
     this.serverSnapshot = this.snapshot
@@ -147,7 +156,10 @@ export class ListStore {
   /** Show a just-published event at once, before the relay echoes it back. */
   pushEvent = (event: Event): void => {
     const changed = event.kind === LABEL_KIND || event.kind === DELETION_KIND ? this.note(event) : this.upsert(event)
-    if (changed) this.scheduleFlush()
+    if (changed) {
+      this.toCache.push(event)
+      this.scheduleFlush()
+    }
   }
 
   /** Verify and store, keeping the newest version per coordinate. True when something changed. */
@@ -225,22 +237,62 @@ export class ListStore {
     // Relays can be flaky and never send EOSE — flip out of loading regardless.
     this.loadingTimer = setTimeout(() => this.finishLoading(), this.loadingTimeoutMs)
 
+    // What this device saw last time renders first, verified again; the
+    // relays are then asked only for what is newer, with an hour's overlap.
+    void this.prime().then((since) => {
+      if (!this.open) return
+      this.subscribeTo(address, since)
+    })
+  }
+
+  private async prime(): Promise<number | undefined> {
+    if (this.primed) return this.newestSeen()
+    this.primed = true
+    let cached: Event[] = []
+    try {
+      cached = await this.cache.load(this.scope)
+    } catch {
+      cached = []
+    }
+    let changed = false
+    for (const event of cached) {
+      const result = event.kind === LABEL_KIND || event.kind === DELETION_KIND ? this.note(event) : this.upsert(event)
+      changed = changed || result
+    }
+    // What came from the cache is already in it; only new arrivals are saved.
+    this.toCache = []
+    if (changed) this.scheduleFlush()
+    return this.newestSeen()
+  }
+
+  private newestSeen(): number | undefined {
+    let newest = 0
+    for (const map of [this.suggestions, this.canonicals]) for (const e of map.values()) newest = Math.max(newest, e.created_at)
+    for (const r of this.rejections.values()) newest = Math.max(newest, r.createdAt)
+    return newest > 0 ? Math.max(0, newest - SINCE_OVERLAP_SECONDS) : undefined
+  }
+
+  private subscribeTo(address: string, since: number | undefined): void {
     // The NIP's two queries: everything anyone suggested in reply to this
     // schema's coordinate, and the canonical entries this curator signed. The
     // verifier enforces the author rule too; `authors` spares the relay.
+    const recent = since === undefined ? {} : { since }
     const filters: Filter[] = [
-      { kinds: [CURATED_SUGGESTION_KIND], '#a': [address], limit: 500 },
-      { kinds: [CURATED_CANONICAL_KIND], authors: [this.schema.namespace], '#a': [address], limit: 500 },
+      { kinds: [CURATED_SUGGESTION_KIND], '#a': [address], limit: 500, ...recent },
+      { kinds: [CURATED_CANONICAL_KIND], authors: [this.schema.namespace], '#a': [address], limit: 500, ...recent },
       // The curator's rejections, and the deletions that undo them.
-      { kinds: [LABEL_KIND], authors: [this.schema.namespace], '#L': [LABEL_NAMESPACE], limit: 500 },
-      { kinds: [DELETION_KIND], authors: [this.schema.namespace], '#k': [String(LABEL_KIND)], limit: 500 },
+      { kinds: [LABEL_KIND], authors: [this.schema.namespace], '#L': [LABEL_NAMESPACE], limit: 500, ...recent },
+      { kinds: [DELETION_KIND], authors: [this.schema.namespace], '#k': [String(LABEL_KIND)], limit: 500, ...recent },
     ]
     this.pendingEose = filters.length
     this.subs = filters.map((filter) =>
       this.pool.subscribeMany(this.relays, filter, {
         onevent: (event) => {
           const changed = event.kind === LABEL_KIND || event.kind === DELETION_KIND ? this.note(event) : this.upsert(event)
-          if (changed) this.scheduleFlush()
+          if (changed) {
+            this.toCache.push(event)
+            this.scheduleFlush()
+          }
         },
         oneose: () => {
           this.pendingEose -= 1
@@ -288,6 +340,11 @@ export class ListStore {
   private flush(): void {
     this.snapshot = this.build()
     for (const listener of this.listeners) listener()
+    if (this.toCache.length > 0) {
+      const batch = this.toCache
+      this.toCache = []
+      this.cache.save(this.scope, batch).catch(() => {})
+    }
   }
 
   private build(): ListSnapshot {

@@ -18,9 +18,9 @@ changes**. bitcoin.mov and the Curare app are read, run and tested against,
 never edited; what each would gain from this work is listed at the end, under
 *Future work*, as the phases here make it possible.
 
-**Being built.** Phases 0–9, in the order given, one commit each, all of them
-in this repository; the table below records where a phase, once built, chose
-differently from what the plan said. Phases 0–8 are built. Every phase is deployable on its own and none reaches
+**Built.** Phases 0–9, in the order given, one commit each, all of them in
+this repository; the table below records where a phase, once built, chose
+differently from what the plan said. Every phase is deployable on its own and none reaches
 forward, except where the text says a later phase is what makes an earlier one
 honest. Phases 0–2 are the request as
 stated — a sub is a schema, a post is a canonical entry, and people can read
@@ -57,6 +57,11 @@ Everything after is what makes it reddit rather than a directory of lists.
 | 8 | "the header shows a check only when both the NIP-05 `_` lookup and the well-known document name the curator" | so it does, and the check has three answers: *claimed…* while checking, *✓ verified* and *✗ unverified*. A list opened by its domain is verified by that route alone — the site served the signed schema — and skips the check |
 | 8 | editing the mute list | republishes the public part and carries the previous event's encrypted content over verbatim, so a curator with private mutes the extension cannot open loses nothing. Two edits in one second are stamped a second apart: replaceable events resolve by timestamp, and a tie broke on id — the same fix as votes, and the fake relay now keeps replaceable kinds the way NIP-01 says |
 | 8 | the mod log "shown on the sub's *log* tab" | and the *Banned* tab beside it, both visible to everyone (the curator's mute list is public; only the curator can edit it), because a ban that nobody can see is not a ban a reader can reason about |
+| 9 | "the list is a setting the viewer can edit" | on the All lists page, in localStorage, in force on the next load; every store asks `directoryRelays()` at call time rather than reading the constant at import. `wss://relay.curare.to` is first in the built-in list and has to be standing before a deploy, or every page pays a failed connection |
+| 9 | events cached "per coordinate with the newest `created_at` seen, so a returning viewer … subscribes with `since`" | with an hour's overlap behind the newest cached event (clocks drift, and a deletion can be older than what it deletes), and every cached event verified again on the way out. The directory's first page is cached too |
+| 9 | NIP-45 `COUNT` for comment counts | one COUNT per visible post on relays whose NIP-11 advertises 45, the larger of the count and what the subscription has gathered; nostr-tools' `countMany` builds its own filters (`#E` by id), so the store asks the relay directly with the post's `#A` |
+| 9 | — | a replacement published within the same second as what it replaces — an edit, a re-curation — is stamped a second later; relays keep the lower id on a tie, and the cache made the race visible |
+| 9 | "the whole directory behind it" in under a second | the caches make a warm return fast; the *whole* directory across many relays is what the relay itself is for, and that is deployment, not code — the relay directory has everything needed |
 | 2 | "done when … `npm run curate` there can curate it" | proven offline: `test/interop.test.ts` (opt-in, `INTEROP=1`) publishes a suggestion built here to the fake relay seeded with bitcoin.mov's real schema and runs that repository's `curate` script in unsigned mode against it — it emits a canonical template this site verifies. No key, no network, nothing changed there |
 
 ## The mapping

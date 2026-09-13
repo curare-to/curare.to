@@ -1,0 +1,8 @@
+[Unit]
+Description=relay.curare.to negentropy sync
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/curare.to/relay
+ExecStart=/usr/bin/node /opt/curare.to/relay/sync.mjs

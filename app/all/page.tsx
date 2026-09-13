@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { DirectoryList } from '@/components/directory/DirectoryList'
 import { OpenList } from '@/components/shell/OpenList'
+import { RelaySettings } from '@/components/shell/RelaySettings'
 
 export const metadata: Metadata = {
   title: 'All lists',
@@ -16,6 +17,9 @@ export default function AllPage() {
       </div>
       <div className="mt-6">
         <DirectoryList />
+      </div>
+      <div className="mt-8">
+        <RelaySettings />
       </div>
     </div>
   )

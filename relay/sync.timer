@@ -1,0 +1,10 @@
+[Unit]
+Description=relay.curare.to negentropy sync, every fifteen minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=15min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

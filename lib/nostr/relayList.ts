@@ -26,7 +26,10 @@ const PRODUCTION = process.env.NODE_ENV === 'production'
 
 const LOCAL = ['ws://localhost:10547'] as const
 
-const PUBLIC = ['wss://ephemeral.mantra.press'] as const
+// relay.curare.to first (relay/ has everything needed to run it; it must be
+// standing before a deploy, or every page pays a failed connection), then
+// the relay bitcoin.mov's list lives on.
+const PUBLIC = ['wss://relay.curare.to', 'wss://ephemeral.mantra.press'] as const
 
 /**
  * curare.to's one addition to bitcoin.mov's file: an explicit list wins over

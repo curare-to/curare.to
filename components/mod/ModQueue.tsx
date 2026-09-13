@@ -174,7 +174,9 @@ function QueueRow({
 
   const approve = () =>
     run('approve', async () => {
-      const prepared = approveTemplate(schema, head, session.pubkey)
+      // A re-curation replaces the canonical entry: stamp it later than the one it replaces.
+      const now = Math.max(Math.floor(Date.now() / 1000), (group.canonical?.created_at ?? 0) + 1)
+      const prepared = approveTemplate(schema, head, session.pubkey, now)
       if (!prepared.template) throw new Error(Object.values(prepared.errors).join(' '))
       return (await signAndPublish(prepared.template, relays)).signed
     })

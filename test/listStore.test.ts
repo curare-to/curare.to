@@ -222,3 +222,55 @@ describe('ListStore rejections', () => {
     await relay.close()
   })
 })
+
+describe('ListStore cache', () => {
+  it('renders from the device cache first, then asks the relay only for what is newer', async () => {
+    const { IndexedDbCache } = await import('@/lib/cache/eventCache')
+    await import('fake-indexeddb/auto')
+    const cache = new IndexedDbCache(indexedDB)
+    const relay = await FakeRelay.start()
+    const pool = new SimplePool()
+    const curator = pubkeyOf('curator')
+    const address = `31889:${curator}:cached`
+    const schema = parseCuratedSchemaEvent(
+      signedBy('curator', {
+        kind: 31889,
+        tags: [
+          ['d', 'cached'], ['title', 't'], ['name', 'cached'], ['description', 'Things.'], ['visibility', 'public'],
+          ['field', 'identifier', 'token', 'required', '', 'Identifier', '{"tag":"d","max":80}'],
+          ['field', 'title', 'text', 'required', '', 'Title', '{"max":200}'],
+          ['relay', relay.url],
+        ],
+        content: 'Things.',
+        created_at: 100,
+      }),
+    )!
+    const suggestion = (salt: string, d: string, created_at: number) =>
+      signedBy(salt, { kind: 31888, tags: [['d', d], ['title', d], ['a', address, '', 'root'], ['p', curator], ['k', '31889']], content: '', created_at })
+
+    // A first visit: the relay has one post; it lands in the cache.
+    const old = suggestion('bob', 'old', 1_000_000)
+    relay.seed(old)
+    const first = new ListStore(schema, { pool, cache, loadingTimeoutMs: 3000 })
+    first.subscribe(() => {})
+    await settle(600)
+    expect(first.getSnapshot().groups.map((g) => g.identifier)).toEqual(['old'])
+    first.close()
+    expect((await cache.load(`list:${address}`)).map((e) => e.id)).toEqual([old.id])
+
+    // A return visit: the cached post shows before the relay answers, and the
+    // relay is asked with `since` an hour behind the newest cached event.
+    const fresh = suggestion('carol', 'fresh', 1_000_500)
+    relay.seed(fresh)
+    const before = relay.requests.length
+    const second = new ListStore(schema, { pool, cache, loadingTimeoutMs: 3000 })
+    second.subscribe(() => {})
+    await settle(600)
+    expect(second.getSnapshot().groups.map((g) => g.identifier)).toEqual(['fresh', 'old'])
+    const filters = relay.requests.slice(before).flat()
+    expect(filters.every((f) => f.since === 1_000_000 - 3600)).toBe(true)
+    second.close()
+    pool.close([relay.url])
+    await relay.close()
+  })
+})

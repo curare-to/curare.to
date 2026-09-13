@@ -33,7 +33,18 @@ npm run dev        # http://localhost:3000
 npm test           # vitest over vectors/ and the stores
 LIVE=1 npm test    # also fetch bitcoin.mov's schema over HTTPS and verify it
 npm run typecheck
+npm run e2e         # Playwright: the real export, served like Pages, against a fake relay
+npm run e2e:single  # the same, built as a single-list site
 ```
+
+## The relay
+
+[relay/](relay/) holds everything to run `relay.curare.to`: a strfry config,
+the write policy (exactly the kinds the site speaks), the negentropy sync
+that pulls those kinds from every relay the lists name, a docker-compose
+file and a systemd timer. It is a cache, not an authority — the directory
+relays are a setting on the *All lists* page, and any list may add it to its
+`relay` tags. See [relay/README.md](relay/README.md).
 
 ## Your own site
 

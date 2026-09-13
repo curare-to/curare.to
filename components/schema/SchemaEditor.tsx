@@ -22,7 +22,7 @@ import {
   type SchemaDraft,
 } from '@/lib/entry/schemaForm'
 import { Nip07Error, signAndPublish } from '@/lib/nostr/nip07'
-import { READ_RELAYS } from '@/lib/nostr/relays'
+import { directoryRelays } from '@/lib/nostr/relays'
 import { sessionStore, useSession } from '@/lib/store/session'
 import { useResolvedSchema } from '@/lib/store/useResolvedSchema'
 import { clearResolveCache } from '@/lib/resolve/schema'
@@ -108,7 +108,7 @@ function Editor({ initial, editing }: { initial: SchemaDraft; editing?: boolean 
   }, [editing])
 
   // A ws:// relay the site itself is built against (a dev or test setup) is not refused.
-  const problems = useMemo(() => validateDraft(draft, { production: PRODUCTION, namespace: session.pubkey ?? undefined, allowInsecure: READ_RELAYS }), [draft, session.pubkey])
+  const problems = useMemo(() => validateDraft(draft, { production: PRODUCTION, namespace: session.pubkey ?? undefined, allowInsecure: directoryRelays() }), [draft, session.pubkey])
   const blocking = problems.filter((p) => !p.warning)
   const set = (patch: Partial<SchemaDraft>) => setDraft((d) => ({ ...d, ...patch }))
 
@@ -134,7 +134,7 @@ function Editor({ initial, editing }: { initial: SchemaDraft; editing?: boolean 
     try {
       const schema = draftToSchema(draft, pubkey)
       const template = buildCuratedSchemaTemplate(schema)
-      const relays = schema.relays.length > 0 ? schema.relays : [...READ_RELAYS]
+      const relays = schema.relays.length > 0 ? schema.relays : [...directoryRelays()]
       const { accepted, total } = await signAndPublish(template, relays)
       clearResolveCache()
       setPublished({ pubkey, identifier: schema.identifier, accepted, total })
@@ -245,7 +245,7 @@ function Editor({ initial, editing }: { initial: SchemaDraft; editing?: boolean 
             >
               Add relay
             </button>
-            {READ_RELAYS.filter((r) => !draft.relays.includes(r)).map((r) => (
+            {directoryRelays().filter((r) => !draft.relays.includes(r)).map((r) => (
               <button key={r} type="button" onClick={() => set({ relays: [...draft.relays, r] })} className="rounded-md border border-line px-3 py-2 text-xs text-muted hover:border-line-strong">
                 + {r}
               </button>

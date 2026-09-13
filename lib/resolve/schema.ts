@@ -8,7 +8,7 @@ import {
   type CuratedSchema,
 } from '@/lib/protocol/curated'
 import { pool as defaultPool } from '@/lib/nostr/pool'
-import { READ_RELAYS } from '@/lib/nostr/relays'
+import { directoryRelays } from '@/lib/nostr/relays'
 import type { CuratorRef, ListRef } from '@/lib/routes'
 
 /* ------------------------------------------------------------------ *
@@ -43,7 +43,7 @@ export interface ResolveDeps {
 
 const defaultDeps = (): ResolveDeps => ({
   pool: defaultPool,
-  relays: READ_RELAYS,
+  relays: directoryRelays(),
   fetch: (...args) => fetch(...args),
   timeoutMs: 8000,
 })

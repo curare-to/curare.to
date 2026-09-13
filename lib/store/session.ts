@@ -4,7 +4,7 @@ import { useSyncExternalStore } from 'react'
 import type { Event } from 'nostr-tools/pure'
 import { getNip07 } from '@/lib/nostr/nip07'
 import { pool } from '@/lib/nostr/pool'
-import { READ_RELAYS } from '@/lib/nostr/relays'
+import { directoryRelays } from '@/lib/nostr/relays'
 import { isRelayUrl } from '@/lib/protocol/curated'
 
 /* ------------------------------------------------------------------ *
@@ -119,7 +119,7 @@ class SessionStore {
   private async loadWriteRelays(pubkey: string): Promise<void> {
     let events: Event[] = []
     try {
-      events = await pool.querySync([...READ_RELAYS], { kinds: [10002], authors: [pubkey] })
+      events = await pool.querySync([...directoryRelays()], { kinds: [10002], authors: [pubkey] })
     } catch {
       events = []
     }

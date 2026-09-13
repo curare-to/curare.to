@@ -4,7 +4,7 @@ import { useSyncExternalStore } from 'react'
 import type { Event } from 'nostr-tools/pure'
 import { getNip07, signAndPublish } from '@/lib/nostr/nip07'
 import { pool } from '@/lib/nostr/pool'
-import { READ_RELAYS } from '@/lib/nostr/relays'
+import { directoryRelays } from '@/lib/nostr/relays'
 import { buildSubscriptionsTemplate, parseSubscriptions, SUBSCRIPTIONS_KIND, type Subscription } from '@/lib/protocol/subscriptions'
 import { sessionStore } from './session'
 
@@ -57,7 +57,7 @@ class SubscriptionStore {
 
   private relays(): string[] {
     const session = sessionStore.getSnapshot()
-    return [...new Set([...READ_RELAYS, ...(session.writeRelays ?? [])])]
+    return [...new Set([...directoryRelays(), ...(session.writeRelays ?? [])])]
   }
 
   private crypto(pubkey: string) {

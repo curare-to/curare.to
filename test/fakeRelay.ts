@@ -33,6 +33,8 @@ export class FakeRelay {
   private subs = new Set<Sub>()
   /** Every REQ filter received, in order, for tests that assert on queries. */
   readonly requests: Filter[][] = []
+  /** Every COUNT (NIP-45) received. */
+  readonly counts: Filter[][] = []
   /** When set, every EVENT is refused with this reason — a relay with a write policy. */
   refuse: string | null = null
   readonly url: string
@@ -119,6 +121,14 @@ export class FakeRelay {
         socket.send(JSON.stringify(['EVENT', id, event]))
       }
       socket.send(JSON.stringify(['EOSE', id]))
+      return
+    }
+    if (verb === 'COUNT') {
+      const id = String(message[1])
+      const filters = message.slice(2) as Filter[]
+      this.counts.push(filters)
+      const count = [...this.events.values()].filter((event) => matchFilters(filters, event)).length
+      socket.send(JSON.stringify(['COUNT', id, { count }]))
       return
     }
     if (verb === 'CLOSE') {

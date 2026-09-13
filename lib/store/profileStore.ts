@@ -4,7 +4,7 @@ import { useSyncExternalStore } from 'react'
 import type { Event } from 'nostr-tools/pure'
 import type { SimplePool } from 'nostr-tools/pool'
 import { pool as defaultPool } from '@/lib/nostr/pool'
-import { READ_RELAYS } from '@/lib/nostr/relays'
+import { directoryRelays } from '@/lib/nostr/relays'
 import { isSafeUrl } from '@/lib/protocol/curated'
 
 /* ------------------------------------------------------------------ *
@@ -67,14 +67,14 @@ export class ProfileStore {
   private queued = new Set<string>()
   private timer: ReturnType<typeof setTimeout> | null = null
   private readonly pool: Pick<SimplePool, 'querySync'>
-  private readonly relays: readonly string[]
+  private readonly relays: readonly string[] | null
   private readonly fetchImpl: typeof fetch
   private readonly batchMs: number
   private extraRelays = new Set<string>()
 
   constructor(options: ProfileStoreOptions = {}) {
     this.pool = options.pool ?? defaultPool
-    this.relays = options.relays ?? READ_RELAYS
+    this.relays = options.relays ?? null
     this.fetchImpl = options.fetch ?? ((...args) => fetch(...args))
     this.batchMs = options.batchMs ?? 80
   }
@@ -118,7 +118,7 @@ export class ProfileStore {
     const pubkeys = [...this.queued]
     this.queued.clear()
     if (pubkeys.length === 0) return
-    const relays = [...new Set([...this.relays, ...this.extraRelays])]
+    const relays = [...new Set([...(this.relays ?? directoryRelays()), ...this.extraRelays])]
     let events: Event[] = []
     try {
       events = await this.pool.querySync(relays, { kinds: [0], authors: pubkeys })

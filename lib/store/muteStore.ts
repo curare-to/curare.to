@@ -4,7 +4,7 @@ import { useSyncExternalStore } from 'react'
 import type { Event } from 'nostr-tools/pure'
 import { getNip07 } from '@/lib/nostr/nip07'
 import { pool } from '@/lib/nostr/pool'
-import { READ_RELAYS } from '@/lib/nostr/relays'
+import { directoryRelays } from '@/lib/nostr/relays'
 import { MUTE_KIND, NO_MUTES, parseMutes, type Mutes } from '@/lib/protocol/mutes'
 
 /* Kind 10000 mute lists, one per pubkey, fetched once. The viewer's own
@@ -63,7 +63,7 @@ class MuteStore {
   private async load(pubkey: string): Promise<void> {
     let events: Event[] = []
     try {
-      events = await pool.querySync([...new Set([...READ_RELAYS, ...this.extraRelays])], { kinds: [MUTE_KIND], authors: [pubkey] })
+      events = await pool.querySync([...new Set([...directoryRelays(), ...this.extraRelays])], { kinds: [MUTE_KIND], authors: [pubkey] })
     } catch {
       events = []
     }

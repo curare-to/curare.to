@@ -74,9 +74,13 @@ export function EntryForm({
     event.preventDefault()
     setFormError(null)
     const signer = pubkey ?? (await sessionStore.signIn())
+    // Addressable events resolve by timestamp, ties by id: a replacement made
+    // within the same second as what it replaces has to be stamped later.
+    const replaces = editing ?? (canonical ? (groups.find((g) => g.identifier === derived)?.canonical ?? null) : null)
+    const now = Math.max(Math.floor(Date.now() / 1000), (replaces?.created_at ?? 0) + 1)
     const prepared = canonical
-      ? { ...prepareCanonical(schema, values, { curator: signer, identifier: derived, source }), identifier: derived }
-      : prepareSuggestion(schema, values, { pubkey: signer, identifier: editingIdentifier ?? undefined })
+      ? { ...prepareCanonical(schema, values, { curator: signer, identifier: derived, source, now }), identifier: derived }
+      : prepareSuggestion(schema, values, { pubkey: signer, identifier: editingIdentifier ?? undefined, now })
     setErrors(prepared.errors)
     if (!prepared.template) {
       const general = prepared.errors.visibility ?? prepared.errors.curator

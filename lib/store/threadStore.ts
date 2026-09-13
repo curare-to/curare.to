@@ -4,6 +4,7 @@ import { useSyncExternalStore } from 'react'
 import type { Event } from 'nostr-tools/pure'
 import type { SimplePool } from 'nostr-tools/pool'
 import { pool as defaultPool } from '@/lib/nostr/pool'
+import { supportsNip } from '@/lib/nostr/relayInfo'
 import { buildThread, countNodes, parseComment, type Comment, type CommentNode } from '@/lib/protocol/comments'
 import type { PostGroup } from '@/lib/protocol/group'
 import type { CuratedSchema } from '@/lib/protocol/curated'
@@ -171,20 +172,30 @@ export function useThread(schema: CuratedSchema, group: PostGroup, relays: strin
 
 const CHUNK = 60
 
+export interface CountStoreOptions extends ThreadStoreOptions {
+  pool?: Pick<SimplePool, 'subscribeMany' | 'ensureRelay'>
+  /** Which relays answer COUNT (NIP-45); asked of NIP-11 by default. */
+  countsOn?: (relay: string) => Promise<boolean>
+}
+
 export class CommentCountStore {
-  private readonly pool: Pick<SimplePool, 'subscribeMany'>
+  private readonly pool: Pick<SimplePool, 'subscribeMany' | 'ensureRelay'>
   private readonly relays: string[]
+  private readonly countsOn: (relay: string) => Promise<boolean>
   private coordinates: string[] = []
   private subs: { close(): void }[] = []
   private roots = new Map<string, Set<string>>() // root coordinate → comment ids
+  private counted = new Map<string, number>() // root coordinate → NIP-45 answer
+  private asked = new Set<string>()
   private listeners = new Set<() => void>()
   private snapshot: Map<string, number> = new Map()
   private flushTimer: ReturnType<typeof setTimeout> | null = null
   private retimer: ReturnType<typeof setTimeout> | null = null
 
-  constructor(relays: string[], options: ThreadStoreOptions = {}) {
+  constructor(relays: string[], options: CountStoreOptions = {}) {
     this.relays = relays
     this.pool = options.pool ?? defaultPool
+    this.countsOn = options.countsOn ?? ((relay) => supportsNip(relay, 45))
   }
 
   subscribe = (listener: () => void): (() => void) => {
@@ -209,6 +220,7 @@ export class CommentCountStore {
 
   private reopen(): void {
     this.close()
+    void this.countWhereAdvertised()
     for (let i = 0; i < this.coordinates.length; i += CHUNK) {
       const chunk = this.coordinates.slice(i, i + CHUNK)
       this.subs.push(
@@ -231,6 +243,42 @@ export class CommentCountStore {
     }
   }
 
+  /**
+   * NIP-45: one COUNT per coordinate on the relays that advertise it, asked
+   * once each. A count from a relay is taken over what the subscription has
+   * gathered when it is larger — the relay knows what it holds; the
+   * subscription only what it has sent so far.
+   */
+  private async countWhereAdvertised(): Promise<void> {
+    const relays: string[] = []
+    for (const relay of this.relays) {
+      try {
+        if (await this.countsOn(relay)) relays.push(relay)
+      } catch {
+        // an unreachable relay counts nothing
+      }
+    }
+    if (relays.length === 0) return
+    for (const coordinate of this.coordinates) {
+      if (this.asked.has(coordinate)) continue
+      this.asked.add(coordinate)
+      let best = -1
+      for (const url of relays) {
+        try {
+          const relay = await this.pool.ensureRelay(url, { connectionTimeout: 4000 })
+          const count = await relay.count([{ kinds: [1111], '#A': [coordinate] }], {})
+          best = Math.max(best, count)
+        } catch {
+          // this relay's count is unknown; the subscription's stands
+        }
+      }
+      if (best >= 0) {
+        this.counted.set(coordinate, best)
+        this.scheduleFlush()
+      }
+    }
+  }
+
   close(): void {
     for (const sub of this.subs) sub.close()
     this.subs = []
@@ -240,7 +288,10 @@ export class CommentCountStore {
     if (this.flushTimer) return
     this.flushTimer = setTimeout(() => {
       this.flushTimer = null
-      this.snapshot = new Map([...this.roots.entries()].map(([root, ids]) => [root, ids.size]))
+      const merged = new Map<string, number>()
+      for (const [root, ids] of this.roots) merged.set(root, ids.size)
+      for (const [root, count] of this.counted) merged.set(root, Math.max(count, merged.get(root) ?? 0))
+      this.snapshot = merged
       for (const listener of this.listeners) listener()
     }, 150)
   }

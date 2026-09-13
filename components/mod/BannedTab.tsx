@@ -7,7 +7,7 @@ import type { CuratedSchema } from '@/lib/protocol/curated'
 import { buildMutesTemplate, MUTE_KIND } from '@/lib/protocol/mutes'
 import { Nip07Error, signAndPublish } from '@/lib/nostr/nip07'
 import { pool } from '@/lib/nostr/pool'
-import { READ_RELAYS } from '@/lib/nostr/relays'
+import { directoryRelays } from '@/lib/nostr/relays'
 import { muteStore, useMutes } from '@/lib/store/muteStore'
 import { useSession } from '@/lib/store/session'
 import { parsePubkey } from '@/lib/routes'
@@ -32,7 +32,7 @@ export function BannedTab({ schema, relays }: { schema: CuratedSchema; relays: s
   useEffect(() => {
     let cancelled = false
     pool
-      .querySync([...new Set([...READ_RELAYS, ...relays])], { kinds: [MUTE_KIND], authors: [schema.namespace] })
+      .querySync([...new Set([...directoryRelays(), ...relays])], { kinds: [MUTE_KIND], authors: [schema.namespace] })
       .then((events) => {
         if (cancelled) return
         setPrevious(events.sort((a, b) => b.created_at - a.created_at || (a.id < b.id ? -1 : 1))[0] ?? null)
@@ -50,7 +50,7 @@ export function BannedTab({ schema, relays }: { schema: CuratedSchema; relays: s
       // Replaceable events resolve by timestamp: two edits in one second must not tie.
       const createdAt = Math.max(Math.floor(Date.now() / 1000), (previous?.created_at ?? 0) + 1)
       const template = buildMutesTemplate({ pubkeys, words, previous, createdAt })
-      const { signed } = await signAndPublish(template, [...new Set([...relays, ...READ_RELAYS, ...session.writeRelays])])
+      const { signed } = await signAndPublish(template, [...new Set([...relays, ...directoryRelays(), ...session.writeRelays])])
       setPrevious(signed)
       await muteStore.push(signed)
     } catch (err) {

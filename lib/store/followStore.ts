@@ -3,7 +3,7 @@
 import { useSyncExternalStore } from 'react'
 import type { Event } from 'nostr-tools/pure'
 import { pool } from '@/lib/nostr/pool'
-import { READ_RELAYS } from '@/lib/nostr/relays'
+import { directoryRelays } from '@/lib/nostr/relays'
 import { followsOf } from '@/lib/rank/wot'
 
 /* Kind 3 follow lists, one per pubkey, fetched once and cached. `null` while unknown. */
@@ -41,7 +41,7 @@ class FollowStore {
   private async load(pubkey: string): Promise<void> {
     let events: Event[] = []
     try {
-      events = await pool.querySync([...new Set([...READ_RELAYS, ...this.extraRelays])], { kinds: [3], authors: [pubkey] })
+      events = await pool.querySync([...new Set([...directoryRelays(), ...this.extraRelays])], { kinds: [3], authors: [pubkey] })
     } catch {
       events = []
     }

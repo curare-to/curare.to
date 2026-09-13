@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { SiteHeader } from '@/components/shell/SiteHeader'
 import { SiteFooter } from '@/components/shell/SiteFooter'
+import { ServiceWorker } from '@/components/shell/ServiceWorker'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://curare.to'),
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SiteHeader />
         <main className="w-full flex-1">{children}</main>
         <SiteFooter />
+        <ServiceWorker />
       </body>
     </html>
   )

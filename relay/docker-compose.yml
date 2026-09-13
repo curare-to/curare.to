@@ -1,0 +1,14 @@
+services:
+  strfry:
+    image: ghcr.io/hoytech/strfry:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:7777:7777"
+    volumes:
+      - ./strfry.conf:/etc/strfry.conf:ro
+      - ./policy.mjs:/app/policy.mjs:ro
+      - strfry-db:/app/strfry-db
+    command: ["strfry", "--config", "/etc/strfry.conf", "relay"]
+
+volumes:
+  strfry-db:

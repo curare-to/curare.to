@@ -4,9 +4,10 @@ import { useSyncExternalStore } from 'react'
 import type { Event } from 'nostr-tools/pure'
 import type { SimplePool } from 'nostr-tools/pool'
 import { pool as defaultPool } from '@/lib/nostr/pool'
-import { READ_RELAYS } from '@/lib/nostr/relays'
+import { directoryRelays } from '@/lib/nostr/relays'
 import { CURATED_SCHEMA_KIND, type CuratedSchema } from '@/lib/protocol/curated'
 import { newest, schemaFromEvent } from '@/lib/resolve/schema'
+import { eventCache, type EventCache } from '@/lib/cache/eventCache'
 
 /* ------------------------------------------------------------------ *
  * The directory: every kind 31889 the directory relays hold, verified,
@@ -42,12 +43,14 @@ export interface DirectoryStoreOptions {
   pool?: Pick<SimplePool, 'querySync'>
   relays?: readonly string[]
   pageSize?: number
+  cache?: EventCache
 }
 
 export class DirectoryStore {
   private readonly pool: Pick<SimplePool, 'querySync'>
-  private readonly relays: readonly string[]
+  private readonly relays: readonly string[] | null
   private readonly pageSize: number
+  private readonly cache: EventCache
   private entries = new Map<string, DirectoryEntry>()
   private oldest: number | null = null
   private exhausted = false
@@ -59,15 +62,24 @@ export class DirectoryStore {
 
   constructor(options: DirectoryStoreOptions = {}) {
     this.pool = options.pool ?? defaultPool
-    this.relays = options.relays ?? READ_RELAYS
+    this.relays = options.relays ?? null
     this.pageSize = options.pageSize ?? PAGE
+    this.cache = options.cache ?? eventCache()
   }
 
   subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener)
     if (!this.started) {
       this.started = true
-      void this.loadMore()
+      // What this device saw last time shows first; the first page then refreshes it.
+      void this.cache
+        .load('directory')
+        .catch(() => [] as Event[])
+        .then((cached) => {
+          for (const event of cached) this.take(event)
+          if (cached.length > 0) this.emit()
+          return this.loadMore()
+        })
     }
     return () => {
       this.listeners.delete(listener)
@@ -84,7 +96,7 @@ export class DirectoryStore {
     this.emit()
     let events: Event[] = []
     try {
-      events = await this.pool.querySync([...this.relays], {
+      events = await this.pool.querySync([...(this.relays ?? directoryRelays())], {
         kinds: [CURATED_SCHEMA_KIND],
         limit: this.pageSize,
         ...(this.oldest !== null ? { until: this.oldest - 1 } : {}),
@@ -96,6 +108,7 @@ export class DirectoryStore {
     if (events.length > 0) {
       const min = Math.min(...events.map((e) => e.created_at))
       this.oldest = this.oldest === null ? min : Math.min(this.oldest, min)
+      this.cache.save('directory', events.filter((e) => schemaFromEvent(e).status === 'ready')).catch(() => {})
     }
     // A short page is not proof of the end: nostr-tools drops forged events
     // before they arrive, so only an empty page says there is nothing older.
