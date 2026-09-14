@@ -37,7 +37,7 @@ export function Countdown() {
   ]
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col items-center px-4 py-24 text-center sm:py-32">
+    <div className="flex flex-col items-center text-center">
       <h1 className="text-xs font-semibold uppercase tracking-wide text-muted">
         {reached ? (
           'It’s time.'

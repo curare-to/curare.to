@@ -1,7 +1,5 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import { SiteHeader } from '@/components/shell/SiteHeader'
-import { SiteFooter } from '@/components/shell/SiteFooter'
 import { ServiceWorker } from '@/components/shell/ServiceWorker'
 
 export const metadata: Metadata = {
@@ -21,13 +19,15 @@ export const metadata: Metadata = {
   },
 }
 
+/**
+ * Only the document: the header and footer are app/(site)/layout.tsx's, so
+ * the home page can stand without them while the countdown is up.
+ */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className="flex min-h-dvh flex-col">
-        <SiteHeader />
-        <main className="w-full flex-1">{children}</main>
-        <SiteFooter />
+        {children}
         <ServiceWorker />
       </body>
     </html>
