@@ -10,9 +10,9 @@ const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? ''
  * front page, in the site's chrome. The value is the signed schema's path
  * (same origin, usually /.well-known/curare.to/nostr.json) or URL; a
  * relative path gets the base path, the way every same-origin fetch here
- * does. Otherwise the home page is a countdown to Friday 18 September 2026,
- * 21:21 UTC (lib/countdown.ts), alone on the page — no header, no footer —
- * and the feed that was here lives at /landing/.
+ * does. Otherwise the home page is a countdown to the moment lib/countdown.ts
+ * names, alone on the page — no header, no footer — and the feed that was
+ * here lives at /landing/.
  */
 const SINGLE = process.env.NEXT_PUBLIC_SINGLE_LIST
   ? process.env.NEXT_PUBLIC_SINGLE_LIST.startsWith('/')

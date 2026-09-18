@@ -1,13 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { COUNTDOWN_TARGET, remainingUntil } from '@/lib/countdown'
+import { COUNTDOWN_TARGET, COUNTDOWN_WHEN, remainingUntil } from '@/lib/countdown'
 
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? ''
 const TARGET = Date.parse(COUNTDOWN_TARGET)
 
 /**
- * The home page until Friday 18 September 2026, 21:21 UTC: the time left,
+ * The home page until the moment lib/countdown.ts names: the time left,
  * to the second, and the moment in the viewer's own time zone. The clock is
  * read only after mount — the export is prerendered, and its HTML must not
  * carry the build's idea of now. Once the moment has passed the page says so
@@ -42,12 +42,14 @@ export function Countdown() {
         {reached ? (
           'It’s time.'
         ) : (
-          <time dateTime={COUNTDOWN_TARGET}>Friday 18 September 2026 · 21:21 UTC</time>
+          <time dateTime={COUNTDOWN_TARGET}>
+            {COUNTDOWN_WHEN.date} · {COUNTDOWN_WHEN.time}
+          </time>
         )}
       </h1>
       <div
         role="timer"
-        aria-label="Time left until Friday 18 September 2026, 21:21 UTC"
+        aria-label={`Time left until ${COUNTDOWN_WHEN.date}, ${COUNTDOWN_WHEN.time}`}
         className="mt-8 grid grid-cols-4 gap-4 sm:gap-10"
       >
         {parts.map(([label, value]) => (

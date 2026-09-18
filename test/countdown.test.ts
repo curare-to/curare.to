@@ -1,18 +1,34 @@
 import { describe, expect, it } from 'vitest'
-import { COUNTDOWN_TARGET, remainingUntil } from '@/lib/countdown'
+import { COUNTDOWN_TARGET, COUNTDOWN_WHEN, remainingUntil } from '@/lib/countdown'
 
 const TARGET = Date.parse(COUNTDOWN_TARGET)
 
 describe('countdown', () => {
-  it('counts down to Friday 18 September 2026, 21:21 UTC', () => {
+  it('counts down to Monday 21 September 2026, 21:21 UTC', () => {
     const d = new Date(TARGET)
-    expect(d.getUTCDay()).toBe(5)
-    expect(d.toISOString()).toBe('2026-09-18T21:21:00.000Z')
+    expect(d.getUTCDay()).toBe(1)
+    expect(d.toISOString()).toBe('2026-09-21T21:21:00.000Z')
+  })
+
+  it('spells the moment as the page shows it', () => {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+      timeZone: 'UTC',
+    }).formatToParts(new Date(TARGET))
+    const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)!.value
+    expect(COUNTDOWN_WHEN.date).toBe(`${part('weekday')} ${part('day')} ${part('month')} ${part('year')}`)
+    expect(COUNTDOWN_WHEN.time).toBe(`${part('hour')}:${part('minute')} UTC`)
   })
 
   it('splits what is left into whole days, hours, minutes and seconds', () => {
-    const now = Date.UTC(2026, 8, 14, 9, 0, 30)
-    expect(remainingUntil(TARGET, now)).toEqual({ days: 4, hours: 12, minutes: 20, seconds: 30, reached: false })
+    const now = Date.UTC(2026, 8, 18, 9, 0, 30)
+    expect(remainingUntil(TARGET, now)).toEqual({ days: 3, hours: 12, minutes: 20, seconds: 30, reached: false })
     expect(remainingUntil(TARGET, TARGET - 1000)).toEqual({ days: 0, hours: 0, minutes: 0, seconds: 1, reached: false })
   })
 

@@ -1,8 +1,10 @@
 /**
- * The moment the home page counts down to: Friday 18 September 2026 at
- * 21:21 UTC. One constant, so moving the moment is a one-line change.
+ * The moment the home page counts down to, and how the page spells it.
+ * Moving it is a change here and to the test that pins it; the page and
+ * the e2e spec follow. test/countdown.test.ts keeps the spelling true.
  */
-export const COUNTDOWN_TARGET = '2026-09-18T21:21:00Z'
+export const COUNTDOWN_TARGET = '2026-09-21T21:21:00Z'
+export const COUNTDOWN_WHEN = { date: 'Monday 21 September 2026', time: '21:21 UTC' }
 
 export interface Remaining {
   days: number

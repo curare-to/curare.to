@@ -80,7 +80,7 @@ npm run serve      # preview the export locally
 `main`; the site is `https://curare.to` (Settings → Pages → Custom domain).
 The build needs nothing secret — the site holds no key.
 
-Until Friday 18 September 2026 at 21:21 UTC the home page is a countdown to
-that moment (`lib/countdown.ts` holds it), and the feed — the viewer's
-subscriptions, or the directory's newest lists — is at `/landing/`. A
-single-list build is untouched: its home page is still the list.
+The home page is a countdown to the moment `lib/countdown.ts` names (Monday
+21 September 2026 at 21:21 UTC), and the feed — the viewer's subscriptions,
+or the directory's newest lists — is at `/landing/`. A single-list build is
+untouched: its home page is still the list.
