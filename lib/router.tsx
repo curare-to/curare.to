@@ -32,9 +32,11 @@ interface RouterState {
   route: Route | null
   /** Null outside the shell — on a static page a link into /r/… is an ordinary navigation. */
   navigate: ((path: string) => void) | null
+  /** Same, for a path that renames where the reader already is: no new history entry, no scroll. */
+  replace: ((path: string) => void) | null
 }
 
-const RouterContext = createContext<RouterState>({ route: null, navigate: null })
+const RouterContext = createContext<RouterState>({ route: null, navigate: null, replace: null })
 
 export function RouterProvider({ children }: { children: ReactNode }) {
   const [location, setLocation] = useState<{ pathname: string; search: string } | null>(null)
@@ -53,9 +55,16 @@ export function RouterProvider({ children }: { children: ReactNode }) {
     window.scrollTo(0, 0)
   }, [])
 
+  const replace = useCallback((path: string) => {
+    const url = new URL(withBase(path), window.location.href)
+    if (url.href === window.location.href) return
+    window.history.replaceState(null, '', url)
+    setLocation({ pathname: url.pathname, search: url.search })
+  }, [])
+
   const value = useMemo<RouterState>(
-    () => ({ route: location ? parseRoute(location.pathname, location.search) : null, navigate }),
-    [location, navigate],
+    () => ({ route: location ? parseRoute(location.pathname, location.search) : null, navigate, replace }),
+    [location, navigate, replace],
   )
 
   return <RouterContext.Provider value={value}>{children}</RouterContext.Provider>
@@ -69,6 +78,16 @@ export function useRoute(): Route | null {
 export function useNavigate(): (path: string) => void {
   const { navigate } = useContext(RouterContext)
   return navigate ?? ((path: string) => window.location.assign(withBase(path)))
+}
+
+/**
+ * Rewrite the address of the page the reader is on — a list that turns out to
+ * have a verified domain is at /r/<domain>/, and says so. Outside the shell it
+ * is nothing: a static page has no address of its own to correct.
+ */
+export function useReplace(): (path: string) => void {
+  const { replace } = useContext(RouterContext)
+  return replace ?? (() => {})
 }
 
 /** Prefix the base path once, for hrefs built by lib/routes. */

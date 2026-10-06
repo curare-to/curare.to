@@ -1,23 +1,32 @@
 import { nip19 } from 'nostr-tools'
 import type { CuratedSchema } from '@/lib/protocol/curated'
-import { isValidDomain, normalizeDomain } from '@/lib/protocol/curated'
+import { CURATED_SCHEMA_KIND, isRelayUrl, isValidDomain, normalizeDomain } from '@/lib/protocol/curated'
 
 /* ------------------------------------------------------------------ *
  * The URL grammar (docs/decentralized-reddit.md, decision 2). The URL is the
  * commitment: it names the curator, and the schema is fetched, verified and
  * parsed before anything else is read.
  *
- *   /r/<curator>/<d>/            the coordinate, spelled out
- *   /r/<curator>/<d>/<entry>/    one post — the group under that d
+ *   /r/<naddr>/                  the coordinate, in one word — what is built
+ *   /r/<naddr>/<entry>/          one post — the group under that d
  *   /r/<domain>/                 a sub whose schema carries a verified domain
  *   /r/<domain>/<entry>/         one of its posts
+ *   /r/<curator>/<d>/            the coordinate spelled out — still read
+ *   /r/<curator>/<d>/<entry>/
  *   /u/<npub>/                   a person
  *
- * <curator> is an npub1… or a NIP-05 address (name@domain, or _@domain).
- * <domain> is a bare hostname. The three are told apart by form — an npub
- * has no dot, a NIP-05 has an @, a domain has a dot and no @ — so the two
- * shapes of /r/ never collide. Identifiers are encodeURIComponent-ed: a `d`
- * may contain anything, colons included.
+ * <naddr> is NIP-19's address: kind 31889, the curator's pubkey, the `d`, and
+ * up to two of the list's relays as hints. It is the form every link here is
+ * built in, because it is the one thing that keeps naming the list when the
+ * curator revises the schema — an nevent would name the event that was
+ * replaced. <curator> is an npub1… or a NIP-05 address (name@domain, or
+ * _@domain), the spelling the site shipped with: still parsed, so links
+ * already handed out keep working, and still built for a NIP-05 curator,
+ * whose pubkey is not known until it resolves. <domain> is a bare hostname.
+ * The four are told apart by form — an naddr starts naddr1, an npub has no
+ * dot, a NIP-05 has an @, a domain has a dot and no @ — so the shapes of /r/
+ * never collide. Identifiers are encodeURIComponent-ed: a `d` may contain
+ * anything, colons included.
  *
  * Parse and build are both here so they cannot drift.
  * ------------------------------------------------------------------ */
@@ -27,7 +36,8 @@ export type CuratorRef =
   | { type: 'nip05'; address: string }
 
 export type ListRef =
-  | { by: 'coordinate'; curator: CuratorRef; identifier: string }
+  /** `relays` are the naddr's hints: where the schema was last seen, carried in the URL. */
+  | { by: 'coordinate'; curator: CuratorRef; identifier: string; relays?: readonly string[] }
   | { by: 'domain'; domain: string }
   /**
    * The single-list build: the schema this site itself serves, at a path or
@@ -55,6 +65,31 @@ export function parsePubkey(value: string): string | null {
   try {
     const decoded = nip19.decode(v.toLowerCase())
     return decoded.type === 'npub' ? decoded.data : null
+  } catch {
+    return null
+  }
+}
+
+/** How many relay hints an naddr carries, written and read. Enough to find the list, short enough to paste. */
+export const NADDR_HINTS = 2
+
+/** An naddr for this kind, as a list address; null for anything else. */
+export function parseNaddr(segment: string): ListRef | null {
+  if (!segment.toLowerCase().startsWith('naddr1')) return null
+  try {
+    const decoded = nip19.decode(segment.toLowerCase())
+    if (decoded.type !== 'naddr') return null
+    const { kind, pubkey, identifier, relays } = decoded.data
+    if (kind !== CURATED_SCHEMA_KIND || !/^[0-9a-f]{64}$/i.test(pubkey)) return null
+    // Hints are somebody else's suggestion of where to look: kept to relay
+    // URLs, and to as many as this site writes, whoever wrote the link.
+    const hints = (relays ?? []).filter(isRelayUrl).slice(0, NADDR_HINTS)
+    return {
+      by: 'coordinate',
+      curator: { type: 'pubkey', pubkey: pubkey.toLowerCase() },
+      identifier,
+      ...(hints.length > 0 ? { relays: hints } : {}),
+    }
   } catch {
     return null
   }
@@ -97,6 +132,12 @@ export function parseRoute(
   if (parts.length === 0) return { kind: 'home' }
 
   if (parts[0] === 'r' && parts.length >= 2) {
+    const address = parseNaddr(parts[1])
+    if (address) {
+      if (parts.length === 2) return { kind: 'list', list: address, tab }
+      if (parts.length === 3) return { kind: 'entry', list: address, entry: parts[2] }
+      return { kind: 'unknown', path: pathname }
+    }
     const curator = parseCurator(parts[1])
     if (curator) {
       if (parts.length === 3) {
@@ -133,13 +174,21 @@ export function curatorSegment(curator: CuratorRef): string {
   return curator.type === 'pubkey' ? nip19.npubEncode(curator.pubkey) : curator.address
 }
 
+/** The coordinate in one segment: kind, curator, `d`, and at most NADDR_HINTS relays. */
+export function naddrSegment(pubkey: string, identifier: string, relays: readonly string[] = []): string {
+  const hints = relays.filter(isRelayUrl).slice(0, NADDR_HINTS)
+  return nip19.naddrEncode({ kind: CURATED_SCHEMA_KIND, pubkey, identifier, ...(hints.length > 0 ? { relays: hints } : {}) })
+}
+
 function listBase(list: ListRef): string {
   if (list.by === 'domain') return `/r/${enc(list.domain)}`
   if (list.by === 'wellknown') {
     // Entries of the site's own list link by coordinate, which the shell serves.
-    return list.namespace && list.identifier ? `/r/${nip19.npubEncode(list.namespace)}/${enc(list.identifier)}` : ''
+    return list.namespace && list.identifier ? `/r/${naddrSegment(list.namespace, list.identifier)}` : ''
   }
-  return `/r/${curatorSegment(list.curator)}/${enc(list.identifier)}`
+  // A NIP-05 curator has no pubkey until it resolves, so that address stays spelled out.
+  if (list.curator.type === 'nip05') return `/r/${curatorSegment(list.curator)}/${enc(list.identifier)}`
+  return `/r/${naddrSegment(list.curator.pubkey, list.identifier, list.relays)}`
 }
 
 /** Build a path for a route. The inverse of `parseRoute`. */
@@ -160,20 +209,24 @@ export function buildPath(route: Route): string {
   }
 }
 
-/** The coordinate form of a schema's address — always resolvable from a relay. */
-export function listRefOf(schema: Pick<CuratedSchema, 'namespace' | 'identifier'>): ListRef {
+type SchemaAddress = Pick<CuratedSchema, 'namespace' | 'identifier'> & { relays?: readonly string[] }
+
+/** The coordinate form of a schema's address — always resolvable from a relay. Its own relays become the naddr's hints. */
+export function listRefOf(schema: SchemaAddress): ListRef {
+  const hints = (schema.relays ?? []).filter(isRelayUrl).slice(0, NADDR_HINTS)
   return {
     by: 'coordinate',
     curator: { type: 'pubkey', pubkey: schema.namespace },
     identifier: schema.identifier,
+    ...(hints.length > 0 ? { relays: hints } : {}),
   }
 }
 
-export function listPath(schema: Pick<CuratedSchema, 'namespace' | 'identifier'>, tab: ListTab = 'front'): string {
+export function listPath(schema: SchemaAddress, tab: ListTab = 'front'): string {
   return buildPath({ kind: 'list', list: listRefOf(schema), tab })
 }
 
-export function entryPath(schema: Pick<CuratedSchema, 'namespace' | 'identifier'>, entry: string): string {
+export function entryPath(schema: SchemaAddress, entry: string): string {
   return buildPath({ kind: 'entry', list: listRefOf(schema), entry })
 }
 

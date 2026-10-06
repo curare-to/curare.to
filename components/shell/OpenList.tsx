@@ -3,9 +3,9 @@
 import { useState, type FormEvent } from 'react'
 import { isValidDomain, normalizeDomain } from '@/lib/protocol/curated'
 import { withBase } from '@/lib/router'
-import { buildPath, parseCurator } from '@/lib/routes'
+import { buildPath, parseCurator, parseNaddr } from '@/lib/routes'
 
-/** A box that turns "bitcoin.mov", "npub1… things" or "_@site.example things" into a list address. */
+/** A box that turns "bitcoin.mov", "naddr1…", "npub1… things" or "_@site.example things" into a list address. */
 export function OpenList() {
   const [value, setValue] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -14,12 +14,17 @@ export function OpenList() {
     event.preventDefault()
     const parts = value.trim().split(/\s+/).filter(Boolean)
     if (parts.length === 1) {
+      const address = parseNaddr(parts[0].replace(/^nostr:/i, ''))
+      if (address) {
+        window.location.assign(withBase(buildPath({ kind: 'list', list: address, tab: 'front' })))
+        return
+      }
       const domain = normalizeDomain(parts[0])
       if (isValidDomain(domain)) {
         window.location.assign(withBase(buildPath({ kind: 'list', list: { by: 'domain', domain }, tab: 'front' })))
         return
       }
-      setError('A domain looks like bitcoin.mov; a coordinate is an npub or name@domain followed by the list identifier.')
+      setError('A domain looks like bitcoin.mov; an address is an naddr1…, or an npub or name@domain followed by the list identifier.')
       return
     }
     if (parts.length === 2) {
@@ -31,7 +36,7 @@ export function OpenList() {
         return
       }
     }
-    setError('Enter a domain (bitcoin.mov), or an npub or name@domain followed by the list identifier.')
+    setError('Enter a domain (bitcoin.mov), an naddr1…, or an npub or name@domain followed by the list identifier.')
   }
 
   return (
@@ -46,7 +51,7 @@ export function OpenList() {
           setValue(e.target.value)
           setError(null)
         }}
-        placeholder="bitcoin.mov — or npub1… identifier"
+        placeholder="bitcoin.mov — or naddr1…, or npub1… identifier"
         className="min-w-0 flex-1 rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-muted focus:border-accent focus:outline-none"
       />
       <button type="submit" className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-ink">

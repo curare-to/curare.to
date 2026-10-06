@@ -35,7 +35,7 @@ function Routed() {
         <Notice
           title="Not found"
           body="There is nothing at this address."
-          hint="A list lives at /r/<npub>/<identifier>/ or /r/<domain>/, and a person at /u/<npub>/."
+          hint="A list lives at /r/<naddr>/ or /r/<domain>/, and a person at /u/<npub>/."
         />
       )
   }

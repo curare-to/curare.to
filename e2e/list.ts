@@ -100,6 +100,33 @@ export function closedSchemaEvent(): Event {
 }
 
 /**
+ * A list that claims a domain, for the address run: the site at that host is
+ * played by the test, which serves the NIP-05 document naming this curator and
+ * this very signed schema at the well-known path.
+ */
+export const DOMAIN = 'things.example'
+export const DOMAIN_LIST = 'domained-things'
+
+export function domainSchemaEvent(): Event {
+  return signedBy('e2e curator', {
+    kind: 31889,
+    tags: [
+      ['d', DOMAIN_LIST],
+      ['title', 'domained things suggestion'],
+      ['name', 'Things at a domain'],
+      ['description', 'A list whose schema claims a domain that answers for it.'],
+      ['visibility', 'public'],
+      ['relay', RELAY],
+      ['domain', DOMAIN],
+      ['field', 'identifier', 'token', 'required', '', 'Identifier', '{"tag":"d","max":80,"derived":true}'],
+      ['field', 'title', 'text', 'required', '', 'Title', '{"max":200}'],
+    ],
+    content: 'A list whose schema claims a domain that answers for it.',
+    created_at: T0,
+  })
+}
+
+/**
  * A second list, for the comments run: one pending post that the run curates
  * from outside the page, so the main list's counts stay what list.spec expects.
  */

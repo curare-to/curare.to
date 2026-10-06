@@ -19,6 +19,8 @@ import type { CuratorRef, ListRef } from '@/lib/routes'
  * takes it from the signed event at its own well-known path; curare.to reads
  * many lists, so the commitment is in the address (decision 2):
  *
+ *   naddr        kind, curator and `d` in one word, plus the relay hints the
+ *                link carries: those first, then as below
  *   npub + d     the relay lookup, on the directory relays and then on any
  *                relay the result names; newest created_at wins, ties on id
  *   nip05 + d    NIP-05 to a pubkey, then as above
@@ -216,16 +218,22 @@ export async function resolveSchema(ref: ListRef, overrides: Partial<ResolveDeps
   const curator = await resolveCurator(ref.curator, deps)
   if (typeof curator !== 'string') return curator
 
-  const found = await lookupOnRelays(curator, ref.identifier, deps.relays, deps)
+  // A link's own hints are asked first; they are where whoever wrote it last
+  // saw the schema. Nothing is trusted for being named there: the lookup
+  // still demands this pubkey, this `d`, and a signature.
+  const relays = [...new Set([...(ref.relays ?? []), ...deps.relays])]
+  const found = await lookupOnRelays(curator, ref.identifier, relays, deps)
   if (found) return found
   return unavailable(
-    `no usable schema "${ref.identifier}" by that curator was found on ${deps.relays.length === 1 ? deps.relays[0] : `${deps.relays.length} relays`}`,
+    `no usable schema "${ref.identifier}" by that curator was found on ${relays.length === 1 ? relays[0] : `${relays.length} relays`}`,
   )
 }
 
 /* -------------------------- session cache --------------------------- */
 
 const cache = new Map<string, Promise<Resolution>>()
+/** What the cache already holds, readable during a render — see peekResolveCache. */
+const settled = new Map<string, Resolution>()
 
 export function cacheKey(ref: ListRef): string {
   if (ref.by === 'domain') return `domain:${normalizeDomain(ref.domain)}`
@@ -244,14 +252,33 @@ export function resolveSchemaCached(ref: ListRef): Promise<Resolution> {
   const promise = resolveSchema(ref).then((result) => {
     if (result.status !== 'ready') cache.delete(key)
     // A schema found by address is also known by its coordinate now.
-    else cache.set(cacheKey({ by: 'coordinate', curator: { type: 'pubkey', pubkey: result.schema.namespace }, identifier: result.schema.identifier }), Promise.resolve(result))
+    else primeResolveCache({ by: 'coordinate', curator: { type: 'pubkey', pubkey: result.schema.namespace }, identifier: result.schema.identifier }, result)
+    if (result.status === 'ready') settled.set(key, result)
     return result
   })
   cache.set(key, promise)
   return promise
 }
 
+/**
+ * Put an address's answer in the cache without asking the network. The domain
+ * form uses it: once a claimed domain has been verified — its NIP-05 names the
+ * curator and it serves this very signed schema, which is more than resolving
+ * by domain asks — the page may move to /r/<domain>/ without resolving twice.
+ */
+export function primeResolveCache(ref: ListRef, resolution: Resolution): void {
+  const key = cacheKey(ref)
+  cache.set(key, Promise.resolve(resolution))
+  if (resolution.status === 'ready') settled.set(key, resolution)
+}
+
+/** What is already known about an address, without waiting — so a renamed address renders without a blank moment. */
+export function peekResolveCache(ref: ListRef): Resolution | null {
+  return settled.get(cacheKey(ref)) ?? null
+}
+
 /** For tests and for a "refresh" action. */
 export function clearResolveCache(): void {
   cache.clear()
+  settled.clear()
 }

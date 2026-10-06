@@ -32,7 +32,7 @@ test('a sub renders at its coordinate: front page, new tab, and a post', async (
 
   // A post page: title, link, body with a safe link, and who suggested it.
   await page.locator('article', { hasText: 'Thing number 4' }).getByRole('link', { name: 'Thing number 4' }).click()
-  await expect(page).toHaveURL(new RegExp(`${IDENTIFIER}/thing-4/$`))
+  await expect(page).toHaveURL(/\/thing-4\/$/)
   await expect(page.getByRole('heading', { level: 1, name: 'Thing number 4' })).toBeVisible()
   await expect(page.getByRole('link', { name: /example\.org ↗/ })).toHaveAttribute('href', 'https://example.org/things/4')
   await expect(page.getByRole('link', { name: 'https://example.org/notes/4' })).toHaveAttribute('rel', /noopener/)

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { cacheKey, resolveSchemaCached, type Resolution } from '@/lib/resolve/schema'
+import { cacheKey, peekResolveCache, resolveSchemaCached, type Resolution } from '@/lib/resolve/schema'
 import type { ListRef } from '@/lib/routes'
 
 export type ResolvedState = { status: 'loading' } | Resolution
@@ -9,7 +9,9 @@ export type ResolvedState = { status: 'loading' } | Resolution
 /** Resolve a list address once per page load and share it (see lib/resolve/schema.ts). */
 export function useResolvedSchema(ref: ListRef): ResolvedState {
   const key = cacheKey(ref)
-  const [state, setState] = useState<{ key: string; value: ResolvedState }>({ key, value: { status: 'loading' } })
+  // An address already resolved renders at once: the list that moves to its
+  // verified domain is the same list, and must not blink through "looking up".
+  const [state, setState] = useState<{ key: string; value: ResolvedState }>(() => ({ key, value: peekResolveCache(ref) ?? { status: 'loading' } }))
 
   useEffect(() => {
     let cancelled = false
@@ -23,5 +25,5 @@ export function useResolvedSchema(ref: ListRef): ResolvedState {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key])
 
-  return state.key === key ? state.value : { status: 'loading' }
+  return state.key === key ? state.value : (peekResolveCache(ref) ?? { status: 'loading' })
 }

@@ -69,7 +69,7 @@ Everything after is what makes it reddit rather than a directory of lists.
 | reddit | curare.to | on the wire |
 |---|---|---|
 | subreddit | a curated list | kind 31889 schema, at `31889:<curator>:<d>` |
-| `r/name` | `/r/<curator>/<d>`, or `/r/<domain>` when the schema's `domain` verifies | `domain` tag + the well-known document |
+| `r/name` | `/r/<naddr>`, or `/r/<domain>` when the schema's `domain` verifies | `domain` tag + the well-known document |
 | the mod team | the curator | one pubkey; a *team* is a FROST threshold key made in the Curare app |
 | a new post, in the modqueue | a suggestion | kind 31888, in reply to the schema |
 | a post on the sub's front page | a canonical entry | kind 31890, signed by the curator |
@@ -171,19 +171,38 @@ it from the signed event at its own well-known path. curare.to reads many
 lists, so the commitment moves into the address:
 
 ```
-/r/<curator>/<d>/            the coordinate, spelled out
+/r/<naddr>/                  the coordinate, in one word — what links are built in
+/r/<naddr>/<entry>/          one post — the group under that d
 /r/<domain>/                 a sub whose schema carries a verified domain
-/r/<curator>/<d>/<entry>/    one post — the group under that d
+/r/<domain>/<entry>/         one of its posts
+/r/<curator>/<d>/            the coordinate spelled out — still read, no longer written
 /u/<pubkey>/                 a person: their posts, their subs, their comments
 ```
 
+`<naddr>` is NIP-19's address: kind 31889, the curator's pubkey, the `d`, and
+up to two of the list's own relays as hints. It is what every link here is
+built in, because a schema is addressable — the curator republishes it under
+the same `d` whenever they revise the list, and the naddr goes on naming it.
+An `nevent` would name the event that was replaced. The hints are where the
+schema was last seen, asked before the directory relays and trusted for
+nothing: the lookup still demands that pubkey, that `d`, and a signature.
+
 `<curator>` is an `npub1…`, or a NIP-05 address (`_@bitcoin.mov`,
-`films@example.org`) that resolves to one. `<domain>` is the shortcut that
+`films@example.org`) that resolves to one. That spelling is what the site
+shipped with; it is still parsed, so every link already handed out keeps
+working, and still built for a NIP-05 curator, whose pubkey is not known until
+it resolves. `<domain>` is the shortcut that
 makes a sub feel like a place: the site fetches
 `https://<domain>/.well-known/curare.to/nostr.json`, verifies the signature,
 checks that the schema's own `domain` tag names that host, and only then
 commits to the pubkey inside. The domain serves the file; the signature is
 what is trusted — exactly bitcoin.mov's rule, applied to somebody else's site.
+
+A list opened at its naddr moves to its domain when the domain answers for it:
+the page runs the claim's two checks — the NIP-05 `_` document names the
+curator, and the host serves this signed schema — and on both passing replaces
+the address in place, with no new history entry and no second lookup. The
+shortest address a list can have is the one it earns.
 
 Whatever form the address takes, the schema is fetched, signature-verified and
 parsed before anything else is read, and every event that follows is scoped to
@@ -800,7 +819,7 @@ and the newest event per coordinate wins, ties broken on `id`, as in Phase 1.
 A row is the schema's `name` (or its `domain`, labelled as a claim until
 Phase 8 verifies it), its `description`, its `picture`, its curator (the
 kind 0 name and NIP-05 when they resolve, else the npub), its `visibility`,
-and when it was last revised; it links to `/r/<npub>/<d>`. Newest first. A
+and when it was last revised; it links to `/r/<naddr>`. Newest first. A
 text filter over name and description runs on what is loaded, and NIP-50
 `search` is passed to relays that advertise it.
 

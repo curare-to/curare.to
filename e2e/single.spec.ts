@@ -18,6 +18,6 @@ test('built for one list, the home page is that list', async ({ page }) => {
   await expect(page).toHaveURL(/\/\?tab=new$/)
   await expect(page.locator('article')).toHaveCount(12)
   await page.locator('article', { hasText: 'Thing number 12' }).getByRole('link', { name: 'Thing number 12' }).click()
-  await expect(page).toHaveURL(new RegExp(`/r/${nip19.npubEncode(CURATOR)}/${IDENTIFIER}/thing-12/$`))
+  await expect(page).toHaveURL(new RegExp(`/r/${nip19.naddrEncode({ kind: 31889, pubkey: CURATOR, identifier: IDENTIFIER })}/thing-12/$`))
   await expect(page.getByRole('heading', { level: 1, name: 'Thing number 12' })).toBeVisible()
 })

@@ -104,7 +104,7 @@ function Editor({ initial, editing }: { initial: SchemaDraft; editing?: boolean 
   const [draft, setDraft] = useState(initial)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [published, setPublished] = useState<{ pubkey: string; identifier: string; accepted: number; total: number } | null>(null)
+  const [published, setPublished] = useState<{ pubkey: string; identifier: string; relays: string[]; accepted: number; total: number } | null>(null)
   const [authorsText, setAuthorsText] = useState(initial.authors.map((a) => nip19.npubEncode(a)).join('\n'))
   const [relayText, setRelayText] = useState('')
 
@@ -142,7 +142,7 @@ function Editor({ initial, editing }: { initial: SchemaDraft; editing?: boolean 
       const relays = schema.relays.length > 0 ? schema.relays : [...directoryRelays()]
       const { accepted, total } = await signAndPublish(template, relays)
       clearResolveCache()
-      setPublished({ pubkey, identifier: schema.identifier, accepted, total })
+      setPublished({ pubkey, identifier: schema.identifier, relays, accepted, total })
     } catch (err) {
       setError(err instanceof Nip07Error ? err.message : 'Something went wrong while publishing.')
     } finally {
@@ -151,7 +151,7 @@ function Editor({ initial, editing }: { initial: SchemaDraft; editing?: boolean 
   }
 
   if (published) {
-    const href = withBase(listPath({ namespace: published.pubkey, identifier: published.identifier }))
+    const href = withBase(listPath({ namespace: published.pubkey, identifier: published.identifier, relays: published.relays }))
     return (
       <div className="mx-auto max-w-2xl px-4 py-10">
         <h1 className="text-2xl font-semibold">{editing ? 'Revised' : 'Published'}</h1>

@@ -2,12 +2,15 @@
 
 import { useEffect } from 'react'
 import type { Event } from 'nostr-tools/pure'
-import { canSuggest, type CuratedSchema } from '@/lib/protocol/curated'
+import { canSuggest, normalizeDomain, type CuratedSchema } from '@/lib/protocol/curated'
 import { useList } from '@/lib/store/listStore'
 import { useSession } from '@/lib/store/session'
 import { profileStore } from '@/lib/store/profileStore'
 import { useResolvedSchema } from '@/lib/store/useResolvedSchema'
-import type { ListRef, ListTab } from '@/lib/routes'
+import { buildPath, type ListRef, type ListTab } from '@/lib/routes'
+import { useReplace } from '@/lib/router'
+import { primeResolveCache, type Resolution } from '@/lib/resolve/schema'
+import { useDomainVerification } from '@/lib/resolve/domain'
 import { ListHeader, listDisplayName } from './ListHeader'
 import { ListSidebar } from './ListSidebar'
 import { PostList } from './PostList'
@@ -37,13 +40,34 @@ export function ListPage({ list, tab, entry }: { list: ListRef; tab: ListTab; en
       />
     )
   }
-  return <ResolvedList schema={resolved.schema} event={resolved.event} list={list} tab={tab} entry={entry} />
+  return <ResolvedList schema={resolved.schema} event={resolved.event} list={list} tab={tab} entry={entry} resolution={resolved} />
 }
 
-function ResolvedList({ schema, event, list: given, tab, entry }: { schema: CuratedSchema; event: Event; list: ListRef; tab: ListTab; entry?: string }) {
+/**
+ * A list reached by its coordinate, whose claimed domain turns out to be true,
+ * is at /r/<domain>/ — and the address bar is corrected to say so, in place,
+ * with no new history entry. The check is the one the header already runs: the
+ * domain's NIP-05 names the curator and the domain serves this signed schema,
+ * which is more than resolving by domain asks for, so the answer is handed
+ * straight to the resolver and the same list keeps rendering.
+ */
+function useDomainAddress(schema: CuratedSchema, given: ListRef, resolution: Resolution, tab: ListTab, entry?: string): boolean {
+  const verified = given.by === 'domain'
+  const verification = useDomainVerification(schema, verified)
+  const replace = useReplace()
+  useEffect(() => {
+    if (verified || verification !== 'verified' || given.by !== 'coordinate' || !schema.domain) return
+    const list: ListRef = { by: 'domain', domain: normalizeDomain(schema.domain) }
+    primeResolveCache(list, resolution)
+    replace(entry ? buildPath({ kind: 'entry', list, entry }) : buildPath({ kind: 'list', list, tab }))
+  }, [verified, verification, given, schema, resolution, tab, entry, replace])
+  return verified
+}
+
+function ResolvedList({ schema, event, list: given, tab, entry, resolution }: { schema: CuratedSchema; event: Event; list: ListRef; tab: ListTab; entry?: string; resolution: Resolution }) {
   // The site's own list links its entries by coordinate once the schema is known.
   const list: ListRef = given.by === 'wellknown' ? { ...given, namespace: schema.namespace, identifier: schema.identifier } : given
-  const domainVerified = given.by === 'domain'
+  const domainVerified = useDomainAddress(schema, given, resolution, tab, entry)
   const session = useSession()
   useEffect(() => {
     document.title = `${listDisplayName(schema, list)} · curare.to`
