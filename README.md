@@ -82,5 +82,8 @@ The build needs nothing secret — the site holds no key.
 
 The home page is a countdown to the moment `lib/countdown.ts` names (Monday
 21 September 2026 at 21:21 UTC), and the feed — the viewer's subscriptions,
-or the directory's newest lists — is at `/landing/`. A single-list build is
-untouched: its home page is still the list.
+or the directory's newest lists — is at `/landing/`. Once the moment has
+passed the countdown redirects there on its own, replacing itself in history
+so Back does not return to it; the link in stays on the page for whoever has
+no JavaScript. A single-list build is untouched: its home page is still the
+list.

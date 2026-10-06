@@ -12,7 +12,8 @@ const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? ''
  * relative path gets the base path, the way every same-origin fetch here
  * does. Otherwise the home page is a countdown to the moment lib/countdown.ts
  * names, alone on the page — no header, no footer — and the feed that was
- * here lives at /landing/.
+ * here lives at /landing/, where the countdown sends the viewer once the
+ * moment has passed.
  */
 const SINGLE = process.env.NEXT_PUBLIC_SINGLE_LIST
   ? process.env.NEXT_PUBLIC_SINGLE_LIST.startsWith('/')

@@ -10,8 +10,10 @@ const TARGET = Date.parse(COUNTDOWN_TARGET)
  * The home page until the moment lib/countdown.ts names: the time left,
  * to the second, and the moment in the viewer's own time zone. The clock is
  * read only after mount — the export is prerendered, and its HTML must not
- * carry the build's idea of now. Once the moment has passed the page says so
- * and opens onto /landing/, where the feed lives.
+ * carry the build's idea of now. Once the moment has passed the page gives
+ * way to /landing/, where the feed lives: it replaces itself there rather
+ * than pushing, so Back does not land on a countdown that has run out. The
+ * way in stays written on the page for whoever the redirect does not carry.
  */
 export function Countdown() {
   const [now, setNow] = useState<number | null>(null)
@@ -20,8 +22,14 @@ export function Countdown() {
     const tick = () => {
       const t = Date.now()
       setNow(t)
-      // Wake on the next whole second, so the display flips as the clock does.
-      if (t < TARGET) timer = setTimeout(tick, 1000 - (t % 1000))
+      if (t < TARGET) {
+        // Wake on the next whole second, so the display flips as the clock does.
+        timer = setTimeout(tick, 1000 - (t % 1000))
+      } else {
+        // The moment has come, by arriving after it or by sitting here as it
+        // passed: go in. No further tick is scheduled, so this fires once.
+        window.location.replace(`${BASE}/landing/`)
+      }
     }
     tick()
     return () => clearTimeout(timer)
@@ -62,7 +70,8 @@ export function Countdown() {
         ))}
       </div>
       {now === null ? null : reached ? (
-        <p className="mt-10 text-sm">
+        <p className="mt-10 text-sm text-muted">
+          Taking you in…{' '}
           <a href={`${BASE}/landing/`} className="text-accent underline hover:text-accent-ink">
             Come in
           </a>
