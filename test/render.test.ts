@@ -1,9 +1,11 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { nip19 } from 'nostr-tools'
 import type { Event } from 'nostr-tools/pure'
-import { parseCuratedSchemaEvent } from '@/lib/protocol/curated'
+import { CURATED_SCHEMA_KIND, parseCuratedSchemaEvent } from '@/lib/protocol/curated'
 import { describeEntry, formatDuration, hasImageField, hostOf } from '@/lib/render/entry'
+import { linkifyParts } from '@/lib/render/linkify'
 
 const vector = (dir: string, name: string) =>
   JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', 'vectors', dir, `${name}.json`), 'utf8'))
@@ -68,5 +70,52 @@ describe('describeEntry', () => {
     expect(formatDuration(59)).toBe('0:59')
     expect(formatDuration(3600)).toBe('1:00:00')
     expect(hostOf('https://www.youtube.com/watch?v=x')).toBe('youtube.com')
+  })
+})
+
+describe('linkifyParts', () => {
+  const PK = 'f87cde3b78b9739f7d19b4dfe5f28a532f67f653bb40df147eb29066472ed72e'
+  const NPUB = nip19.npubEncode(PK)
+  const NADDR = nip19.naddrEncode({ kind: CURATED_SCHEMA_KIND, pubkey: PK, identifier: 'bitcoin.mov' })
+
+  it('links an npub mention to the person', () => {
+    expect(linkifyParts(`ask nostr:${NPUB} about it`)).toEqual([
+      { kind: 'text', text: 'ask ' },
+      { kind: 'ref', href: `/u/${NPUB}/`, label: `${NPUB.slice(0, 12)}…` },
+      { kind: 'text', text: ' about it' },
+    ])
+  })
+
+  it('links an naddr mention to the list it names', () => {
+    expect(linkifyParts(`crossposted from nostr:${NADDR}`)).toEqual([
+      { kind: 'text', text: 'crossposted from ' },
+      { kind: 'ref', href: `/r/${NADDR}/`, label: `${NADDR.slice(0, 12)}…` },
+    ])
+  })
+
+  it('leaves an naddr for any other kind as text', () => {
+    const entry = nip19.naddrEncode({ kind: 31890, pubkey: PK, identifier: 'imdb:tt2821314' })
+    const article = nip19.naddrEncode({ kind: 30023, pubkey: PK, identifier: 'why' })
+    expect(linkifyParts(`nostr:${entry} nostr:${article}`)).toEqual([
+      { kind: 'text', text: `nostr:${entry}` },
+      { kind: 'text', text: ' ' },
+      { kind: 'text', text: `nostr:${article}` },
+    ])
+  })
+
+  it('carries the naddr’s relay hints into the link, and keeps unsafe urls as text', () => {
+    const hinted = nip19.naddrEncode({
+      kind: CURATED_SCHEMA_KIND,
+      pubkey: PK,
+      identifier: 'bitcoin.mov',
+      relays: ['wss://relay.example'],
+    })
+    expect(linkifyParts(`nostr:${hinted}`)).toEqual([{ kind: 'ref', href: `/r/${hinted}/`, label: `${hinted.slice(0, 12)}…` }])
+    expect(linkifyParts('see https://example.org/post and nostr:naddr1nonsense')).toEqual([
+      { kind: 'text', text: 'see ' },
+      { kind: 'url', url: 'https://example.org/post' },
+      { kind: 'text', text: ' and ' },
+      { kind: 'text', text: 'nostr:naddr1nonsense' },
+    ])
   })
 })
