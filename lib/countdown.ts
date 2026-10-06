@@ -3,8 +3,8 @@
  * Moving it is a change here and to the test that pins it; the page and
  * the e2e spec follow. test/countdown.test.ts keeps the spelling true.
  */
-export const COUNTDOWN_TARGET = '2026-09-21T21:21:00Z'
-export const COUNTDOWN_WHEN = { date: 'Monday 21 September 2026', time: '21:21 UTC' }
+export const COUNTDOWN_TARGET = '2026-10-08T21:21:00Z'
+export const COUNTDOWN_WHEN = { date: 'Thursday 8 October 2026', time: '21:21 UTC' }
 
 export interface Remaining {
   days: number

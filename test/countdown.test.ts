@@ -4,10 +4,10 @@ import { COUNTDOWN_TARGET, COUNTDOWN_WHEN, remainingUntil } from '@/lib/countdow
 const TARGET = Date.parse(COUNTDOWN_TARGET)
 
 describe('countdown', () => {
-  it('counts down to Monday 21 September 2026, 21:21 UTC', () => {
+  it('counts down to Thursday 8 October 2026, 21:21 UTC', () => {
     const d = new Date(TARGET)
-    expect(d.getUTCDay()).toBe(1)
-    expect(d.toISOString()).toBe('2026-09-21T21:21:00.000Z')
+    expect(d.getUTCDay()).toBe(4)
+    expect(d.toISOString()).toBe('2026-10-08T21:21:00.000Z')
   })
 
   it('spells the moment as the page shows it', () => {
@@ -27,7 +27,7 @@ describe('countdown', () => {
   })
 
   it('splits what is left into whole days, hours, minutes and seconds', () => {
-    const now = Date.UTC(2026, 8, 18, 9, 0, 30)
+    const now = Date.UTC(2026, 9, 5, 9, 0, 30)
     expect(remainingUntil(TARGET, now)).toEqual({ days: 3, hours: 12, minutes: 20, seconds: 30, reached: false })
     expect(remainingUntil(TARGET, TARGET - 1000)).toEqual({ days: 0, hours: 0, minutes: 0, seconds: 1, reached: false })
   })
