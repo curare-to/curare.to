@@ -29,14 +29,19 @@ import { clearResolveCache } from '@/lib/resolve/schema'
 import { withBase } from '@/lib/router'
 import { listPath, parsePubkey, type ListRef } from '@/lib/routes'
 import { Notice } from '@/components/list/ListPage'
-import { CURARE_APP_URL } from '@/components/mod/ModQueue'
+import { CURARE_APP_URL, CURARE_TESTFLIGHT_URL } from '@/components/mod/ModQueue'
 
 const PRODUCTION = process.env.NODE_ENV === 'production'
 
 const input = 'w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-muted focus:border-accent focus:outline-none'
 const small = 'rounded-md border border-line bg-surface px-2 py-1 text-sm text-ink focus:border-accent focus:outline-none'
 
-/** /new/: pick a template, fill in the identity and the fields, publish a kind 31889 — your key becomes the curator. */
+/**
+ * /new/: pick a template, fill in the identity and the fields. A new list is
+ * signed in the Curare app — the page ends in the TestFlight join, not a
+ * publish — while a curator revising their own schema (?edit=…) still
+ * republishes the kind 31889 from here.
+ */
 export function SchemaEditorPage() {
   const params = useSearchParams()
   const edit = params.get('edit')
@@ -171,7 +176,8 @@ function Editor({ initial, editing }: { initial: SchemaDraft; editing?: boolean 
       <form
         onSubmit={(e) => {
           e.preventDefault()
-          void publish()
+          // A new list is signed in the app now; only a revision publishes from here.
+          if (editing) void publish()
         }}
         className="mt-6 space-y-8"
         noValidate
@@ -317,14 +323,33 @@ function Editor({ initial, editing }: { initial: SchemaDraft; editing?: boolean 
           ) : (
             <p className="text-sm text-accent-ink">This is a usable schema.</p>
           )}
-          <p className="text-sm text-ink-2">
-            <strong>Your key becomes the curator.</strong> The schema is signed in your extension
-            {session.pubkey ? ` as ${nip19.npubEncode(session.pubkey).slice(0, 16)}…` : ''}, and only that key can put anything on the list&apos;s front page.
-          </p>
+          {editing ? (
+            <p className="text-sm text-ink-2">
+              <strong>Your key becomes the curator.</strong> The schema is signed in your extension
+              {session.pubkey ? ` as ${nip19.npubEncode(session.pubkey).slice(0, 16)}…` : ''}, and only that key can put anything on the list&apos;s front page.
+            </p>
+          ) : (
+            <p className="text-sm text-ink-2">
+              <strong>A new list is started in the app.</strong> This page shows what one is made of; the signing happens in the Curare
+              app — the beta, on TestFlight — and the key that signs it becomes the curator, the only key that can put anything on the
+              list&apos;s front page.
+            </p>
+          )}
           {error ? <p className="text-sm text-danger">{error}</p> : null}
-          <button type="submit" disabled={busy || blocking.length > 0} className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-ink disabled:opacity-50">
-            {busy ? 'Signing…' : editing ? 'Sign and republish' : session.pubkey ? 'Sign and publish' : 'Sign in and publish'}
-          </button>
+          {editing ? (
+            <button type="submit" disabled={busy || blocking.length > 0} className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-ink disabled:opacity-50">
+              {busy ? 'Signing…' : 'Sign and republish'}
+            </button>
+          ) : (
+            // Apple's own badge artwork, public/download-on-the-app-store.svg, taken
+            // from developer.apple.com. Apple publishes no TestFlight badge, and this
+            // one is meant for an App Store listing: point it at the listing instead
+            // of the beta as soon as the app has one.
+            <a href={CURARE_TESTFLIGHT_URL} rel="noopener noreferrer" target="_blank" className="inline-block no-underline">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={withBase('/download-on-the-app-store.svg')} alt="Download on the App Store" width={120} height={40} className="h-10 w-auto" />
+            </a>
+          )}
         </section>
       </form>
     </div>

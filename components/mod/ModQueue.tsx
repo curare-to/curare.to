@@ -22,6 +22,8 @@ import { useReports } from '@/lib/store/reportStore'
 import type { Report } from '@/lib/protocol/reports'
 
 export const CURARE_APP_URL = 'https://github.com/curare-to/curated-kmp'
+/** The app's open beta: where a new list is started, and signed, from now on. */
+export const CURARE_TESTFLIGHT_URL = 'https://testflight.apple.com/join/p4pzQmrU'
 
 /**
  * The curator's queue: what `npm run curate` does, on the page. Approve

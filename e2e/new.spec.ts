@@ -1,7 +1,15 @@
 import { expect, test } from '@playwright/test'
 import { installExtension } from './extension'
+import { CURARE_TESTFLIGHT_URL } from '../components/mod/ModQueue'
 
-test('a list made on /new/ accepts a post from a second browser', async ({ page, browser }) => {
+/**
+ * /new/ shows what a list is made of and hands the signing to the app: the
+ * editor still verifies the draft and edits its fields, and the way on is the
+ * TestFlight join, not a publish. What a published list then does — suggest,
+ * queue, front page, directory — is post.spec.ts, curate.spec.ts and
+ * directory.spec.ts, against the lists the run seeds.
+ */
+test('the editor verifies a draft and sends whoever would publish it to the beta', async ({ page }) => {
   await installExtension(page, 'e2e founder')
 
   await page.goto('/new/')
@@ -22,42 +30,10 @@ test('a list made on /new/ accepts a post from a second browser', async ({ page,
   await expect(page.getByRole('list').last().locator('li')).toHaveCount(7)
   await expect(page.getByRole('button', { name: 'Remove field' }).nth(1)).toBeDisabled()
 
-  await page.getByRole('button', { name: 'Sign in and publish' }).click()
-  await expect(page.getByRole('heading', { name: 'Published' })).toBeVisible()
-  await page.getByRole('link', { name: 'Open the list' }).click()
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Founded on the page')
-  await expect(page.getByText('0 on the front page')).toBeVisible()
-  const listUrl = page.url()
-
-  // The founder is the curator (still signed in — the session survives a navigation): the sidebar offers
-  // the schema for editing, and the queue tab is theirs.
-  await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Edit the schema' })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Queue ✎' })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Download for your own domain' })).toHaveAttribute('download', 'nostr.json')
-
-  // Somebody else, in another browser, posts to it.
-  const other = await browser.newContext()
-  const second = await other.newPage()
-  await installExtension(second, 'e2e second browser')
-  await second.goto(listUrl)
-  await second.getByRole('link', { name: 'Suggest' }).click()
-  await second.getByLabel(/^Title/).fill('First post on a new list')
-  await second.getByLabel(/^Link/).fill('https://example.org/first')
-  await second.getByRole('button', { name: 'Sign in and publish' }).click()
-  await expect(second.getByRole('heading', { name: 'Published' })).toBeVisible()
-  await other.close()
-
-  // The founder sees it in the queue and puts it on the front page.
-  await page.goto(`${listUrl}?tab=queue`)
-  await expect(page.getByRole('heading', { name: 'Pending (1)' })).toBeVisible()
-  await page.locator('article', { hasText: 'First post on a new list' }).getByRole('button', { name: 'Approve', exact: true }).click()
-  await page.getByRole('link', { name: 'Front page' }).click()
-  await expect(page.locator('article', { hasText: 'First post on a new list' })).toBeVisible()
-  // The link rule: a link post's identifier is the link's hash.
-  await expect(page.locator('article').first().getByRole('link', { name: 'First post on a new list' })).toHaveAttribute('href', /\/url%3A[0-9a-f]{16}\/$/)
-
-  // And the list is in the directory, without anyone's say-so.
-  await page.goto('/all/')
-  await expect(page.getByRole('link', { name: 'Founded on the page' })).toBeVisible()
+  // Nothing is signed here: the usable schema ends in the beta, in a new tab,
+  // behind Apple's badge.
+  const join = page.getByRole('link', { name: 'Download on the App Store' })
+  await expect(join).toHaveAttribute('href', CURARE_TESTFLIGHT_URL)
+  await expect(join).toHaveAttribute('target', '_blank')
+  await expect(page.getByRole('button', { name: /publish/i })).toHaveCount(0)
 })

@@ -9,6 +9,9 @@ test('the curator works the queue: approve, reject, edit-then-approve, re-curate
   await installExtension(page, 'e2e curator')
   await page.goto(LIST)
   await page.getByRole('button', { name: 'Sign in' }).click()
+  // The curator's own list: the schema is theirs to revise and theirs to serve.
+  await expect(page.getByRole('link', { name: 'Edit the schema' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Download for your own domain' })).toHaveAttribute('download', 'nostr.json')
   await page.getByRole('link', { name: 'Queue ✎' }).click()
   await expect(page).toHaveURL(/\?tab=queue$/)
 
